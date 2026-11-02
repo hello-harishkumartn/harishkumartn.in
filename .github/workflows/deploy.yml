@@ -13,15 +13,19 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Decode binary assets
+      - name: Unpack bundle and decode binary assets
         run: |
           set -e
+          if ls bundle/rest.tgz.b64.part-* >/dev/null 2>&1; then
+            cat bundle/rest.tgz.b64.part-* | base64 -d | tar -xzf -
+          fi
           find site -type f -name '*.b64' | while read -r f; do
             base64 -d "$f" > "${f%.b64}"
             rm "$f"
           done
           touch site/.nojekyll
           echo "files: $(find site -type f | wc -l)"
+          test -f site/index.html
       - name: Publish to gh-pages
         uses: peaceiris/actions-gh-pages@v4
         with:
