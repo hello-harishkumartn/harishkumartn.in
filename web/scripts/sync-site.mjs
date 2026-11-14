@@ -1,123 +1,99 @@
 #!/usr/bin/env node
+import crypto from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-const webDir = path.resolve(__dirname, '..');
-const repoRoot = path.resolve(webDir, '..');
-const distDir = path.join(webDir, 'dist');
-const siteDir = path.join(repoRoot, 'site');
-const previewDir = path.join(repoRoot, 'preview');
-const lifeDir = path.join(siteDir, 'life');
+/**
+ * Folders in site/ that the build never writes. life/ is the Life Graph app;
+ * projects/ holds generated project pages (scripts/project-pages.mjs) and demo drops.
+ */
+export const PROTECTED_DIRS = ['life', 'projects'];
 
-console.log('[sync-site] Starting safe site synchronization...');
-
-// 1. Pre-sync assertions
-if (!fs.existsSync(distDir) || !fs.existsSync(path.join(distDir, 'index.html'))) {
-  console.error('[sync-site] Error: web/dist/index.html does not exist. Run npm run build first.');
-  process.exit(1);
-}
-
-if (!fs.existsSync(lifeDir) || !fs.existsSync(path.join(lifeDir, 'index.html'))) {
-  console.error('[sync-site] Error: Protected site/life/ application is missing.');
-  process.exit(1);
-}
-
-const preLifeIndexStat = fs.statSync(path.join(lifeDir, 'index.html'));
-console.log(`[sync-site] Pre-check passed: site/life/ is intact (index.html size: ${preLifeIndexStat.size} bytes).`);
-
-// 2. Clean and synchronize site/assets/
-const siteAssetsDir = path.join(siteDir, 'assets');
-const distAssetsDir = path.join(distDir, 'assets');
-
-if (!fs.existsSync(distAssetsDir)) {
-  console.error('[sync-site] Error: web/dist/assets/ does not exist.');
-  process.exit(1);
-}
-
-let prunedCount = 0;
-if (fs.existsSync(siteAssetsDir)) {
-  const existingAssets = fs.readdirSync(siteAssetsDir);
-  for (const file of existingAssets) {
-    fs.rmSync(path.join(siteAssetsDir, file), { recursive: true, force: true });
-    prunedCount++;
+/** path -> sha256 for every file under dir ({} if dir is missing). */
+function snapshot(dir) {
+  const out = {};
+  if (!fs.existsSync(dir)) return out;
+  for (const rel of fs.readdirSync(dir, { recursive: true })) {
+    const file = path.join(dir, rel);
+    if (fs.statSync(file).isFile()) out[rel] = crypto.createHash('sha256').update(fs.readFileSync(file)).digest('hex');
   }
-} else {
-  fs.mkdirSync(siteAssetsDir, { recursive: true });
+  return out;
 }
 
-const newAssets = fs.readdirSync(distAssetsDir);
-for (const file of newAssets) {
-  fs.cpSync(path.join(distAssetsDir, file), path.join(siteAssetsDir, file), { recursive: true });
+function changedFiles(before, after) {
+  const keys = new Set([...Object.keys(before), ...Object.keys(after)]);
+  return [...keys].filter((k) => before[k] !== after[k]);
 }
-console.log(`[sync-site] Ephemeral assets reconciled: pruned ${prunedCount} old files, wrote ${newAssets.length} fresh assets.`);
 
-// 3. Copy root entry files from web/dist/ into site/ (strictly preserving site/life/)
-const distEntries = fs.readdirSync(distDir);
-let rootCopiedCount = 0;
-for (const item of distEntries) {
-  if (item === 'assets' || item === 'life') continue;
-  const srcPath = path.join(distDir, item);
-  const destPath = path.join(siteDir, item);
-  const stat = fs.statSync(srcPath);
-  if (stat.isFile()) {
-    fs.copyFileSync(srcPath, destPath);
-    rootCopiedCount++;
-  } else if (stat.isDirectory()) {
-    fs.cpSync(srcPath, destPath, { recursive: true });
-    rootCopiedCount++;
+/**
+ * Copies a fresh Vite build (distDir) into siteDir and stages previewDir.
+ * Wipes site/assets/ so stale hashed chunks cannot pile up, never writes the
+ * protected folders and throws if any of them changed.
+ */
+export function syncSite({ distDir, siteDir, previewDir, log = () => {} }) {
+  if (!fs.existsSync(path.join(distDir, 'index.html'))) {
+    throw new Error(`${distDir}/index.html does not exist. Run npm run build first.`);
   }
-}
+  const distAssetsDir = path.join(distDir, 'assets');
+  if (!fs.existsSync(distAssetsDir)) throw new Error(`${distAssetsDir} does not exist.`);
+  if (!fs.existsSync(path.join(siteDir, 'life', 'index.html'))) {
+    throw new Error('Protected site/life/ application is missing.');
+  }
 
-// Ensure CNAME and .nojekyll in site/
-const cnamePath = path.join(siteDir, 'CNAME');
-fs.writeFileSync(cnamePath, 'harishkumartn.in\n');
-const nojekyllPath = path.join(siteDir, '.nojekyll');
-if (!fs.existsSync(nojekyllPath)) {
-  fs.writeFileSync(nojekyllPath, '');
-}
+  const before = Object.fromEntries(PROTECTED_DIRS.map((d) => [d, snapshot(path.join(siteDir, d))]));
 
-console.log(`[sync-site] Root files synchronized: updated ${rootCopiedCount} items in site/.`);
+  // 1. Replace site/assets/ with the fresh build's assets.
+  const siteAssetsDir = path.join(siteDir, 'assets');
+  fs.rmSync(siteAssetsDir, { recursive: true, force: true });
+  fs.cpSync(distAssetsDir, siteAssetsDir, { recursive: true });
 
-// 4. Synchronize preview/ tree (including preview/life/)
-// Wipe first so leftover hashed chunks from earlier builds cannot accumulate.
-if (fs.existsSync(previewDir)) {
+  // 2. Copy root entries from dist/, skipping assets and the protected folders.
+  const skip = new Set(['assets', ...PROTECTED_DIRS]);
+  const rootEntries = fs.readdirSync(distDir).filter((item) => !skip.has(item));
+  for (const item of rootEntries) {
+    fs.cpSync(path.join(distDir, item), path.join(siteDir, item), { recursive: true });
+  }
+  fs.writeFileSync(path.join(siteDir, 'CNAME'), 'harishkumartn.in\n');
+  const nojekyll = path.join(siteDir, '.nojekyll');
+  if (!fs.existsSync(nojekyll)) fs.writeFileSync(nojekyll, '');
+  log(`site/ updated: ${rootEntries.length} root entries, assets replaced.`);
+
+  // 3. Rebuild preview/ from the build plus the protected folders from site/.
   fs.rmSync(previewDir, { recursive: true, force: true });
-}
-fs.mkdirSync(previewDir, { recursive: true });
-fs.cpSync(distDir, previewDir, { recursive: true });
-const previewLifeDir = path.join(previewDir, 'life');
-fs.cpSync(lifeDir, previewLifeDir, { recursive: true });
-console.log('[sync-site] Local preview tree synchronized under preview/ (including Life Graph preview).');
+  fs.mkdirSync(previewDir, { recursive: true });
+  for (const item of fs.readdirSync(distDir).filter((i) => !PROTECTED_DIRS.includes(i))) {
+    fs.cpSync(path.join(distDir, item), path.join(previewDir, item), { recursive: true });
+  }
+  for (const d of PROTECTED_DIRS) {
+    const src = path.join(siteDir, d);
+    if (fs.existsSync(src)) fs.cpSync(src, path.join(previewDir, d), { recursive: true });
+  }
+  log('preview/ staged with life/ and projects/.');
 
-// 5. Post-sync boundary assertions
-if (!fs.existsSync(path.join(lifeDir, 'index.html'))) {
-  console.error('[sync-site] FATAL: site/life/index.html was removed during sync!');
-  process.exit(1);
-}
-
-const postLifeIndexStat = fs.statSync(path.join(lifeDir, 'index.html'));
-if (postLifeIndexStat.size !== preLifeIndexStat.size) {
-  console.error('[sync-site] FATAL: site/life/index.html size changed unexpectedly!');
-  process.exit(1);
-}
-
-if (!fs.existsSync(path.join(siteDir, 'CNAME')) || fs.readFileSync(path.join(siteDir, 'CNAME'), 'utf8').trim() !== 'harishkumartn.in') {
-  console.error('[sync-site] FATAL: site/CNAME is missing or invalid!');
-  process.exit(1);
+  // 4. Post-sync checks.
+  for (const d of PROTECTED_DIRS) {
+    const changed = changedFiles(before[d], snapshot(path.join(siteDir, d)));
+    if (changed.length) throw new Error(`site/${d}/ changed during sync: ${changed.slice(0, 5).join(', ')}`);
+  }
+  if (fs.readFileSync(path.join(siteDir, 'CNAME'), 'utf8').trim() !== 'harishkumartn.in') {
+    throw new Error('site/CNAME is missing or invalid.');
+  }
 }
 
-if (!fs.existsSync(nojekyllPath)) {
-  console.error('[sync-site] FATAL: site/.nojekyll is missing!');
-  process.exit(1);
+if (process.argv[1] && fileURLToPath(import.meta.url) === path.resolve(process.argv[1])) {
+  const webDir = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
+  const repoRoot = path.resolve(webDir, '..');
+  try {
+    syncSite({
+      distDir: path.join(webDir, 'dist'),
+      siteDir: path.join(repoRoot, 'site'),
+      previewDir: path.join(repoRoot, 'preview'),
+      log: (m) => console.log(`[sync-site] ${m}`),
+    });
+    console.log('[sync-site] Done: site/life/ and site/projects/ unchanged, CNAME verified, preview staged.');
+  } catch (err) {
+    console.error(`[sync-site] Error: ${err.message}`);
+    process.exit(1);
+  }
 }
-
-if (!fs.existsSync(path.join(previewDir, 'index.html')) || !fs.existsSync(path.join(previewDir, 'life', 'index.html'))) {
-  console.error('[sync-site] FATAL: preview tree is incomplete!');
-  process.exit(1);
-}
-
-console.log('[sync-site] Post-sync verification passed: site/life/ is intact, site/CNAME verified and preview staged.');
-console.log('[sync-site] Synchronization completed successfully.');
