@@ -1,0 +1,289 @@
+{
+  "refreshedAt": "2026-11-14T09:00:00+05:30",
+  "agentCount": 23,
+  "themeDefault": "desert",
+  "routines": [
+    {
+      "id": "r1",
+      "name": "Sample morning news digest",
+      "schedule": "daily 6:00",
+      "status": "ok",
+      "tag": "last succeeded"
+    },
+    {
+      "id": "r2",
+      "name": "Sample inbox triage",
+      "schedule": "daily 7:15",
+      "status": "ok",
+      "tag": "last succeeded"
+    },
+    {
+      "id": "r3",
+      "name": "Sample uptime watch",
+      "schedule": "every 30 min",
+      "status": "watching",
+      "tag": "all green"
+    },
+    {
+      "id": "r4",
+      "name": "Sample weekly report",
+      "schedule": "Fridays 18:00",
+      "status": "pending",
+      "tag": "next run Friday"
+    },
+    {
+      "id": "r5",
+      "name": "Sample paper reader",
+      "schedule": "weekly",
+      "status": "never",
+      "tag": "not run yet"
+    }
+  ],
+  "desks": [
+    {
+      "id": "research",
+      "label": "Research Desk",
+      "color": "teal",
+      "agents": [
+        {
+          "id": "ccw",
+          "name": "Sample Scout",
+          "short": "Scout",
+          "status": "watching",
+          "next": "Next :30",
+          "detail": "Scans sample feeds for new topics."
+        },
+        {
+          "id": "cms",
+          "name": "Sample Reader",
+          "short": "Reader",
+          "status": "idle",
+          "next": "Idle",
+          "detail": "Summarises sample articles."
+        },
+        {
+          "id": "crd",
+          "name": "Sample Checker",
+          "short": "Checker",
+          "status": "idle",
+          "next": "Idle",
+          "detail": "Checks sample facts against sources."
+        }
+      ]
+    },
+    {
+      "id": "inbox",
+      "label": "Inbox Desk",
+      "color": "yellow",
+      "agents": [
+        {
+          "id": "pms",
+          "name": "Sample Sorter",
+          "short": "Sorter",
+          "status": "active",
+          "next": "Running",
+          "detail": "Sorts a sample inbox into folders."
+        },
+        {
+          "id": "arm",
+          "name": "Sample Replier",
+          "short": "Replier",
+          "status": "idle",
+          "next": "Idle",
+          "detail": "Drafts sample replies for review."
+        },
+        {
+          "id": "prm",
+          "name": "Sample Reminder",
+          "short": "Reminder",
+          "status": "pending",
+          "next": "Next 18:00",
+          "detail": "Sends sample reminders."
+        },
+        {
+          "id": "prr",
+          "name": "Sample Tagger",
+          "short": "Tagger",
+          "status": "idle",
+          "next": "Idle",
+          "detail": "Tags sample threads by topic."
+        }
+      ]
+    },
+    {
+      "id": "reports",
+      "label": "Reports Desk",
+      "color": "green",
+      "agents": [
+        {
+          "id": "gms",
+          "name": "Sample Writer",
+          "short": "Writer",
+          "status": "idle",
+          "next": "Idle",
+          "detail": "Writes a sample daily summary."
+        },
+        {
+          "id": "itm",
+          "name": "Sample Charter",
+          "short": "Charter",
+          "status": "idle",
+          "next": "Idle",
+          "detail": "Builds sample charts."
+        },
+        {
+          "id": "ith",
+          "name": "Sample Editor",
+          "short": "Editor",
+          "status": "pending",
+          "next": "Next Friday",
+          "detail": "Edits the sample weekly report."
+        },
+        {
+          "id": "pw",
+          "name": "Sample Publisher",
+          "short": "Publisher",
+          "status": "idle",
+          "next": "Idle",
+          "detail": "Publishes sample reports."
+        }
+      ]
+    },
+    {
+      "id": "monitoring",
+      "label": "Monitoring Desk",
+      "color": "pink",
+      "agents": [
+        {
+          "id": "cha",
+          "name": "Sample Pinger",
+          "short": "Pinger",
+          "status": "watching",
+          "next": "Next :30",
+          "detail": "Pings sample services."
+        },
+        {
+          "id": "cr",
+          "name": "Sample Logger",
+          "short": "Logger",
+          "status": "idle",
+          "next": "Idle",
+          "detail": "Collects sample logs."
+        },
+        {
+          "id": "fa",
+          "name": "Sample Alerter",
+          "short": "Alerter",
+          "status": "idle",
+          "next": "Idle",
+          "detail": "Raises sample alerts."
+        },
+        {
+          "id": "ith2",
+          "name": "Sample Auditor",
+          "short": "Auditor",
+          "status": "idle",
+          "next": "Idle",
+          "detail": "Audits sample configs."
+        }
+      ]
+    }
+  ],
+  "standalone": [
+    {
+      "id": "pa",
+      "name": "Sample Hub",
+      "short": "Hub",
+      "status": "active",
+      "next": "Primary",
+      "detail": "Primary sample agent that coordinates the desks.",
+      "color": "blue",
+      "primary": true
+    },
+    {
+      "id": "wp",
+      "name": "Sample Pulse",
+      "short": "Pulse",
+      "status": "idle",
+      "next": "Idle",
+      "detail": "Sample end of week summary.",
+      "color": "sand"
+    },
+    {
+      "id": "aie",
+      "name": "Sample Curator",
+      "short": "Curator",
+      "status": "idle",
+      "next": "Idle",
+      "detail": "Collects sample links.",
+      "color": "sand"
+    },
+    {
+      "id": "ffu",
+      "name": "Sample Follower",
+      "short": "Follower",
+      "status": "idle",
+      "next": "Idle",
+      "detail": "Follows up on sample tasks.",
+      "color": "sand"
+    },
+    {
+      "id": "tc",
+      "name": "Sample Timer",
+      "short": "Timer",
+      "status": "idle",
+      "next": "Idle",
+      "detail": "Keeps sample timers.",
+      "color": "sand"
+    },
+    {
+      "id": "ls",
+      "name": "Sample Librarian",
+      "short": "Librarian",
+      "status": "idle",
+      "next": "Idle",
+      "detail": "Files sample notes.",
+      "color": "sand"
+    },
+    {
+      "id": "pih",
+      "name": "Sample Helper",
+      "short": "Helper",
+      "status": "idle",
+      "next": "Idle",
+      "detail": "Answers sample questions.",
+      "color": "sand"
+    },
+    {
+      "id": "es",
+      "name": "Sample Explorer",
+      "short": "Explorer",
+      "status": "idle",
+      "next": "Idle",
+      "detail": "Explores sample ideas.",
+      "color": "sand"
+    }
+  ],
+  "activity": [
+    {
+      "time": "09:00",
+      "color": "blue",
+      "body": "<em>Sample Hub</em> started the sample day"
+    },
+    {
+      "time": "08:45",
+      "color": "teal",
+      "body": "<em>Sample Scout</em> found 3 sample topics"
+    },
+    {
+      "time": "08:30",
+      "color": "pink",
+      "body": "<em>Sample Pinger</em> reports all sample services up"
+    },
+    {
+      "time": "08:10",
+      "color": "yellow",
+      "body": "<em>Sample Sorter</em> sorted 12 sample messages"
+    }
+  ]
+}
