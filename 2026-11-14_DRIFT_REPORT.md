@@ -1,0 +1,3 @@
+## egm-redo.md
+
+- Build configuration in `web/vite.config.ts`: Omitted manual `manualChunks` grouping for `vendor-three` and `vendor-rapier`, keeping Vite default dynamic chunking with `chunkSizeWarningLimit: 2600`. Rollup cross-chunk dependency analysis grouped shared React runtime helpers and Framer Motion primitives into `vendor-rapier` when manually split, which forced `index.html` to inject a 3.2 MB `<link rel="modulepreload">` for Rapier on initial page load. Vite native dynamic import splitting correctly isolates `react-three-rapier` (2.25 MB) and Three.js runtime chunks without preloading them in `index.html`.

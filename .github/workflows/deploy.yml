@@ -19,6 +19,8 @@ jobs:
           if ls bundle/rest.tgz.b64.part-* >/dev/null 2>&1; then
             mkdir -p /tmp/rest
             cat bundle/rest.tgz.b64.part-* | base64 -d | tar -xzf - -C /tmp/rest
+            # Remove stale build chunks from bundle so only media/model assets are unpacked
+            rm -f /tmp/rest/site/assets/*.js /tmp/rest/site/assets/*.css /tmp/rest/site/assets/*.map /tmp/rest/site/assets/*.woff2
             # committed files in site/ are newer and win; bundle only fills in unchanged assets
             cp -rn /tmp/rest/site/. site/
           fi
