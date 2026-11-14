@@ -1,0 +1,17 @@
+node_modules
+dist
+dist-ssr
+*.local
+.env
+.env.*
+.DS_Store
+.vercel
+*.log
+
+# local briefs, logs, refs
+ref/guide.mp4
+BRIEF*.md
+brainstorm*.md
+*.log
+.claude/
+dist/
