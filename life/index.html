@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex,nofollow">
+<meta name="referrer" content="no-referrer">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob:; connect-src 'self'; worker-src 'self' blob:; base-uri 'none'; form-action 'none'">
+<meta name="theme-color" content="#0d0b09">
+<title>Life Graph</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@600;800&family=JetBrains+Mono:wght@400;600&family=Space+Grotesk:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="style.css">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cpath d='M9 4h14l-4 16h-6z' fill='%23f5f1ea'/%3E%3Ccircle cx='16' cy='24' r='5' fill='%23fb923c'/%3E%3C/svg%3E">
+</head>
+<body>
+
+<!-- Login -->
+<main id="login" class="login" aria-labelledby="login-title">
+  <div class="court-bg" aria-hidden="true"></div>
+  <form id="login-form" class="login-card" autocomplete="on">
+    <svg class="shuttle" viewBox="0 0 64 80" aria-hidden="true">
+      <g class="feathers">
+        <path d="M14 6 L26 50 L38 50 L50 6 Z" />
+        <path d="M22 6 L28 50 M32 4 L32 50 M42 6 L36 50" />
+        <path d="M17 18 H47 M20 30 H44" />
+      </g>
+      <ellipse cx="32" cy="52" rx="9" ry="3" class="band" />
+      <path d="M23 53 Q32 76 41 53 Z" class="cork" />
+    </svg>
+    <h1 id="login-title">Life Graph</h1>
+    <p class="tag">Every day a rally. Every rally a point on the map.</p>
+    <input type="text" name="username" value="harish" autocomplete="username" hidden>
+    <label class="field">
+      <span>Password</span>
+      <input id="password" type="password" autocomplete="current-password" required autofocus>
+    </label>
+    <label class="check">
+      <input id="remember" type="checkbox">
+      <span>Remember on this device</span>
+    </label>
+    <button id="enter" type="submit" class="btn-primary">Enter the court</button>
+    <p id="login-msg" class="msg" role="status" aria-live="polite"></p>
+  </form>
+</main>
+
+<!-- App -->
+<div id="app" class="app" hidden>
+  <header class="topbar">
+    <div class="brand">
+      <svg viewBox="0 0 32 32" aria-hidden="true"><path d="M9 4h14l-4 16h-6z" fill="#f5f1ea"/><circle cx="16" cy="24" r="5" fill="#fb923c"/></svg>
+      <span>Life Graph</span>
+    </div>
+    <div class="search">
+      <input id="search" type="search" placeholder="Find a person, place or day" autocomplete="off" aria-label="Search the graph">
+      <ul id="search-results" class="results" role="listbox" hidden></ul>
+    </div>
+    <div class="actions">
+      <button id="reset" class="btn-ghost" title="Reset view">Reset view</button>
+      <button id="lock" class="btn-ghost" title="Lock and forget this device">Lock</button>
+    </div>
+  </header>
+
+  <section id="stats" class="stats" aria-label="Stats"></section>
+
+  <div id="graph" class="graph" aria-label="3D graph of your days"></div>
+
+  <aside id="legend" class="legend" aria-label="Node types. Tap to show or hide."></aside>
+
+  <aside id="panel" class="panel" hidden aria-live="polite">
+    <button id="panel-close" class="panel-close" aria-label="Close">&times;</button>
+    <div class="grip" aria-hidden="true"></div>
+    <div id="panel-body"></div>
+  </aside>
+
+  <footer class="timeline">
+    <button id="play" class="btn-play" aria-label="Play the season">&#9654;</button>
+    <input id="slider" type="range" min="0" max="0" value="0" aria-label="Timeline">
+    <output id="slider-date" class="mono"></output>
+  </footer>
+</div>
+
+<script src="vendor/lg-vendor.min.js"></script>
+<script type="module" src="app.js"></script>
+</body>
+</html>
