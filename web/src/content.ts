@@ -17,6 +17,7 @@ export type SectionId =
   | 'home'
   | 'about'
   | 'work'
+  | 'projects'
   | 'education'
   | 'ideas'
   | 'markets'
@@ -139,6 +140,7 @@ export const nav: NavItem[] = [
   { id: 'home', label: 'Home' },
   { id: 'about', label: 'About' },
   { id: 'work', label: 'Work' },
+  { id: 'projects', label: 'Projects' },
   { id: 'education', label: 'Education' },
   { id: 'ideas', label: 'Ideas' },
   { id: 'markets', label: 'Markets' },

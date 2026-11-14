@@ -8,6 +8,7 @@ import type { SectionId } from '../content';
 export const sectionComponents: Record<Exclude<SectionId, 'home'>, ComponentType> = {
   about: lazy(() => import('./About').then((m) => ({ default: m.About }))),
   work: lazy(() => import('./Work').then((m) => ({ default: m.Work }))),
+  projects: lazy(() => import('./Projects').then((m) => ({ default: m.Projects }))),
   education: lazy(() => import('./Education').then((m) => ({ default: m.Education }))),
   ideas: lazy(() => import('./Ideas').then((m) => ({ default: m.Ideas }))),
   markets: lazy(() => import('./Markets').then((m) => ({ default: m.Markets }))),
