@@ -1,0 +1,6 @@
+baseline-preview/
+preview/
+web/node_modules/
+web/dist/
+*.log
+.DS_Store
