@@ -5,15 +5,16 @@ import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { projects } from '../src/projects.ts';
-import { renderPages, writeProjectPages } from '../scripts/project-pages.mjs';
+import { MARKER, renderPages, writeProjectPages } from '../scripts/project-pages.mjs';
 
 const siteDir = path.resolve(fileURLToPath(import.meta.url), '../../../site');
 const pages = renderPages();
 const page = (slug) => pages[`${slug}/index.html`];
 const esc = (s) => s.replace(/[.*+?^${}()|[\]\\/]/g, '\\$&');
 
-test('renders the index, the stylesheet and one page per project', () => {
-  assert.deepEqual(Object.keys(pages).sort(), ['index.html', 'projects.css', ...projects.map((p) => `${p.slug}/index.html`)].sort());
+test('renders the index, the stylesheet and one page per project without its own app page', () => {
+  const paged = projects.filter((p) => !p.appPage);
+  assert.deepEqual(Object.keys(pages).sort(), ['index.html', 'projects.css', ...paged.map((p) => `${p.slug}/index.html`)].sort());
 });
 
 test('committed site/projects pages exist and are up to date (run npm run pages)', () => {
@@ -25,7 +26,7 @@ test('committed site/projects pages exist and are up to date (run npm run pages)
 });
 
 test('every project page has its Code link, tags and a coming soon note', () => {
-  for (const p of projects) {
+  for (const p of projects.filter((q) => !q.appPage)) {
     const html = page(p.slug);
     assert.match(html, new RegExp(`<a [^>]*href="${esc(p.codeUrl)}"[^>]*>Code`), p.slug);
     assert.match(html, /Live demo coming soon/, p.slug);
@@ -45,9 +46,9 @@ test('every html page has lang, a title, the stylesheet and a back link', () => 
   }
 });
 
-test('the index links all 7 projects', () => {
+test('the index links all 8 projects', () => {
   for (const p of projects) assert.match(pages['index.html'], new RegExp(`href="/projects/${p.slug}/"`));
-  assert.equal(pages['index.html'].match(/href="\/projects\/[a-z0-9-]+\/"/g).length, 7);
+  assert.equal(pages['index.html'].match(/href="\/projects\/[a-z0-9-]+\/"/g).length, 8);
 });
 
 test('the agents map page links its live app', () => {
@@ -77,4 +78,18 @@ test('page copy has no em or en dashes and no Oxford comma', () => {
     assert.doesNotMatch(text, /[–—]/, rel);
     assert.doesNotMatch(text, /, (and|or) /, rel);
   }
+});
+
+test('the AutoColor app is committed at its project page and the generator leaves it alone', () => {
+  const file = path.join(siteDir, 'projects', 'autocolor', 'index.html');
+  const html = fs.readFileSync(file, 'utf8');
+  assert.doesNotMatch(html, new RegExp(MARKER), 'the app must not carry the generator marker');
+  assert.match(html, /<title>AutoColor/);
+  for (const f of ['app.js', 'worker.js', 'engine.js', 'config.js', 'engine.wasm.b64', 'licenses/NOTICE']) assert.ok(fs.existsSync(path.join(siteDir, 'projects', 'autocolor', f)), f);
+  assert.ok(!fs.existsSync(path.join(siteDir, 'projects', 'autocolor', 'engine.wasm')), 'only the .b64 is committed');
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'pages-'));
+  fs.mkdirSync(path.join(dir, 'projects', 'autocolor'), { recursive: true });
+  fs.writeFileSync(path.join(dir, 'projects', 'autocolor', 'index.html'), 'the app');
+  writeProjectPages(dir);
+  assert.equal(fs.readFileSync(path.join(dir, 'projects', 'autocolor', 'index.html'), 'utf8'), 'the app');
 });

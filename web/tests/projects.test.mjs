@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { projects, projectsSection } from '../src/projects.ts';
 
-const SLUGS = ['forgeloop', 'recallx', 'complyai', 'sentinelx', 'agentmesh', 'harish-agents-map', 'harish-ops-colony'];
+const SLUGS = ['forgeloop', 'recallx', 'complyai', 'sentinelx', 'agentmesh', 'harish-agents-map', 'harish-ops-colony', 'autocolor'];
 const REPOS = {
   forgeloop: 'autonomous-agent-harness',
   recallx: 'enterprise-knowledge-ai',
@@ -11,9 +11,10 @@ const REPOS = {
   agentmesh: 'multi-agent-control',
   'harish-agents-map': 'harish-agents-map',
   'harish-ops-colony': 'harish-ops-colony',
+  autocolor: 'autocolor',
 };
 
-test('lists exactly the 7 public projects in order', () => {
+test('lists exactly the 8 public projects in order', () => {
   assert.deepEqual(projects.map((p) => p.slug), SLUGS);
 });
 
@@ -43,4 +44,8 @@ test('visible copy has no em or en dashes and no Oxford comma', () => {
   const text = JSON.stringify({ projects, projectsSection });
   assert.doesNotMatch(text, /[–—]/);
   assert.doesNotMatch(text, /, (and|or) /);
+});
+
+test('only AutoColor hosts its app at its project page', () => {
+  assert.deepEqual(projects.filter((p) => p.appPage).map((p) => p.slug), ['autocolor']);
 });
