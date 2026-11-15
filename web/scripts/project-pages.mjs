@@ -7,6 +7,7 @@ import { projects } from '../src/projects.ts';
 /**
  * Renders the static /projects/ pages from src/projects.ts and writes them into site/projects/.
  * Pages carry MARKER; an existing index.html without it (a demo drop) is never overwritten.
+ * Projects with appPage set host their app at /projects/<slug>/, so no page is rendered for them.
  */
 export const MARKER = '<meta name="generator" content="project-pages">';
 
@@ -96,7 +97,7 @@ function indexPage() {
     description: 'Projects built by Harish Kumar T N.',
     body: `<p class="kicker">Projects</p>
 <h1>Things I've built</h1>
-<p class="lead">Agent systems and 3D dashboards. Every project is open source on GitHub.</p>
+<p class="lead">Agent systems, 3D dashboards and browser tools. Every project is open source on GitHub.</p>
 <ul class="cards">
 ${cards}
 </ul>`,
@@ -106,7 +107,7 @@ ${cards}
 /** relative path under projects/ -> file body */
 export function renderPages() {
   const out = { 'index.html': indexPage(), 'projects.css': CSS };
-  for (const p of projects) out[`${p.slug}/index.html`] = projectPage(p);
+  for (const p of projects) if (!p.appPage) out[`${p.slug}/index.html`] = projectPage(p);
   return out;
 }
 

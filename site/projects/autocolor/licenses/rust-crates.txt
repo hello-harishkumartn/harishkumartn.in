@@ -1,0 +1,104 @@
+Rust crates in the dependency tree of engine.wasm (name version licence). Link-time optimisation
+removes code the engine does not call, so not all of them end up in the binary.
+
+adler2 v2.0.1 | 0BSD OR MIT OR Apache-2.0
+alloc-no-stdlib v2.0.4 | BSD-3-Clause
+alloc-no-stdlib v3.0.0 | BSD-3-Clause
+alloc-stdlib v0.2.4 | BSD-3-Clause
+alloc-stdlib v0.3.0 | BSD-3-Clause
+autocolor-engine v0.1.0 | MIT
+bit_field v0.10.4 | MIT OR Apache-2.0
+bitflags v2.13.2 | MIT OR Apache-2.0
+brotli-decompressor v5.0.3 | BSD-3-Clause/MIT
+brotli-decompressor v6.3.1 | BSD-3-Clause/MIT
+bytemuck v1.25.2 | Zlib OR Apache-2.0 OR MIT
+byteorder-lite v0.1.0 | Unlicense OR MIT
+cfg-if v1.0.5 | MIT OR Apache-2.0
+chrono v0.4.45 | MIT OR Apache-2.0
+color_quant v1.1.0 | MIT
+craft-crw v0.1.0 | MIT OR Apache-2.0
+craft-image-codecs v0.1.0 | MIT OR Apache-2.0
+craft-jpeg v0.1.0 | MIT OR Apache-2.0
+craft-metadata v0.1.0 | MIT OR Apache-2.0
+craft-psd v0.1.0 | MIT OR Apache-2.0
+craft-raw v0.1.0 | MIT OR Apache-2.0
+craft-tiff v0.1.0 | MIT OR Apache-2.0
+crc32fast v1.5.5 | MIT OR Apache-2.0
+crossbeam-deque v0.8.8 | MIT OR Apache-2.0
+crossbeam-epoch v0.9.21 | MIT OR Apache-2.0
+crossbeam-utils v0.8.23 | MIT OR Apache-2.0
+either v1.19.0 | MIT OR Apache-2.0
+encoding_rs v0.8.44 | AND BSD-3-Clause
+exr v1.74.3 | BSD-3-Clause
+fax v0.2.7 | MIT
+fdeflate v0.3.7 | MIT OR Apache-2.0
+flate2 v1.1.11 | MIT OR Apache-2.0
+gif v0.14.2 | MIT OR Apache-2.0
+half v2.7.1 | MIT OR Apache-2.0
+image v0.25.10 | MIT OR Apache-2.0
+image-webp v0.2.4 | MIT OR Apache-2.0
+itoa v1.0.19 | MIT OR Apache-2.0
+jpeg-encoder v0.6.1 | AND IJG
+jxl-bitstream v1.1.0 | MIT OR Apache-2.0
+jxl-coding v1.0.1 | MIT OR Apache-2.0
+jxl-color v0.11.0 | MIT OR Apache-2.0
+jxl-frame v0.13.3 | MIT OR Apache-2.0
+jxl-grid v0.6.2 | MIT OR Apache-2.0
+jxl-image v0.13.0 | MIT OR Apache-2.0
+jxl-jbr v0.2.1 | MIT OR Apache-2.0
+jxl-modular v0.11.3 | MIT OR Apache-2.0
+jxl-oxide v0.12.6 | MIT OR Apache-2.0
+jxl-oxide-common v1.0.0 | MIT OR Apache-2.0
+jxl-render v0.12.4 | MIT OR Apache-2.0
+jxl-threadpool v1.0.0 | MIT OR Apache-2.0
+jxl-vardct v0.11.1 | MIT OR Apache-2.0
+lebe v0.5.3 | BSD-3-Clause
+lightcraft-color v0.21.1 | MIT OR Apache-2.0
+lightcraft-develop v0.21.1 | MIT OR Apache-2.0
+lightcraft-geom v0.21.1 | MIT OR Apache-2.0
+lightcraft-inpaint v0.21.1 | MIT OR Apache-2.0
+lightcraft-meta v0.21.1 | MIT OR Apache-2.0
+lightcraft-pipeline v0.21.1 | MIT OR Apache-2.0
+lightcraft-raster v0.21.1 | MIT OR Apache-2.0
+lightcraft-raw v0.21.1 | MIT OR Apache-2.0
+memchr v2.8.3 | Unlicense OR MIT
+miniz_oxide v0.8.9 | MIT OR Zlib OR Apache-2.0
+miniz_oxide v0.9.1 | MIT OR Zlib OR Apache-2.0
+moxcms v0.8.1 | BSD-3-Clause OR Apache-2.0
+multiversion_no_op v1.0.0 | Apache-2.0 OR MIT
+num-traits v0.2.19 | MIT OR Apache-2.0
+once_cell v1.21.4 | MIT OR Apache-2.0
+pin-project-lite v0.2.17 | Apache-2.0 OR MIT
+png v0.18.1 | MIT OR Apache-2.0
+proc-macro2 v1.0.107 | MIT OR Apache-2.0
+pxfm v0.1.30 | BSD-3-Clause OR Apache-2.0
+qoi v0.4.1 | MIT/Apache-2.0
+quick-error v2.0.1 | MIT/Apache-2.0
+quick-xml v0.41.0 | MIT
+quote v1.0.47 | MIT OR Apache-2.0
+rayon v1.12.0 | MIT OR Apache-2.0
+rayon-core v1.13.0 | MIT OR Apache-2.0
+scopeguard v1.2.0 | MIT OR Apache-2.0
+serde v1.0.229 | MIT OR Apache-2.0
+serde_core v1.0.229 | MIT OR Apache-2.0
+serde_derive v1.0.229 | MIT OR Apache-2.0
+serde_json v1.0.154 | MIT OR Apache-2.0
+simd-adler32 v0.3.10 | MIT
+smallvec v1.16.5 | MIT OR Apache-2.0
+syn v2.0.119 | MIT OR Apache-2.0
+syn v3.0.10 | MIT OR Apache-2.0
+thiserror v2.0.21 | MIT OR Apache-2.0
+thiserror-impl v2.0.21 | MIT OR Apache-2.0
+tiff v0.11.3 | MIT
+tracing v0.1.44 | MIT
+tracing-core v0.1.36 | MIT
+unicode-ident v1.0.27 | AND Unicode-3.0
+weezl v0.1.12 | MIT OR Apache-2.0
+zerocopy v0.8.63 | BSD-2-Clause OR Apache-2.0 OR MIT
+zerocopy-derive v0.8.63 | BSD-2-Clause OR Apache-2.0 OR MIT
+zlib-rs v0.6.8 | Zlib
+zmij v1.0.23 | MIT
+zune-core v0.5.3 | MIT OR Apache-2.0 OR Zlib
+zune-inflate v0.2.54 | MIT OR Apache-2.0 OR Zlib
+zune-jpeg v0.5.15 | MIT OR Apache-2.0 OR Zlib
+zune-jpegxl v0.5.2 | MIT OR Apache-2.0 OR Zlib

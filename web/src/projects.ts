@@ -28,6 +28,8 @@ export interface Project {
   codeUrl: string;
   /** Extra links on the project page, e.g. an app that is already live. */
   links?: ProjectLink[];
+  /** The app itself lives at /projects/<slug>/, so no project page is generated there. */
+  appPage?: boolean;
 }
 
 type ProjectInput = Omit<Project, 'href' | 'codeUrl'>;
@@ -43,7 +45,7 @@ const define = (p: ProjectInput): Project => ({
 export const projectsSection = {
   kicker: 'Projects',
   title: "Things I've built",
-  intro: 'Agent systems and 3D dashboards I have built. All of them are open source on GitHub.',
+  intro: 'Agent systems, 3D dashboards and browser tools I have built. All of them are open source on GitHub.',
 };
 
 export const projects: Project[] = [
@@ -97,5 +99,13 @@ export const projects: Project[] = [
     tags: ['Three.js', 'JavaScript', 'Static site'],
     repo: 'harish-ops-colony',
     links: [{ label: 'Open the app sample', href: 'app/', note: 'Sample data: the agents, routines and activity shown are made up.' }],
+  }),
+  define({
+    slug: 'autocolor',
+    title: 'AutoColor',
+    description: 'Automatic photo colour correction in your browser with Rust and LightCraft compiled to WebAssembly. Photos never leave your device.',
+    tags: ['Rust', 'WebAssembly', 'LightCraft', 'JavaScript', 'Google Drive'],
+    repo: 'autocolor',
+    appPage: true,
   }),
 ];
