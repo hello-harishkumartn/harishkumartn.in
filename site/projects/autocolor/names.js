@@ -45,4 +45,5 @@ export const MESSAGES = {
   heic: 'HEIC is not supported by this browser. Open it in Safari or convert it to JPEG first.',
   raw: 'RAW files are not supported. Export a JPEG from your camera app first.',
   unsupported: 'This file type is not supported. Use JPEG, PNG or WebP.',
+  blocked: 'This browser is blocking access to the photo pixels, usually because of a privacy setting such as fingerprinting protection. Allow it for this site or try another browser.',
 };

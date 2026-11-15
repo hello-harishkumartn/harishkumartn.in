@@ -70,15 +70,22 @@ h2 { margin: 0 0 0.4rem; font-size: 1.25rem; }
 .compare img:not([src]) { visibility: hidden; }
 .compare .before { clip-path: inset(0 calc(100% - var(--pos)) 0 0); }
 .compare::after { content: ""; position: absolute; top: 0; bottom: 0; left: var(--pos); width: 2px; background: var(--fg); opacity: 0.8; pointer-events: none; }
-.card:not(.done) .compare::after, .card:not(.done) .tag { display: none; }
+.card:not(.done) .compare { display: none; }
 .tag { position: absolute; top: 0.5rem; padding: 0.1rem 0.5rem; border-radius: 999px; background: rgba(13, 11, 9, 0.8); color: var(--fg); font-size: 0.75rem; }
 .tag.left { left: 0.5rem; }
 .tag.right { right: 0.5rem; }
 .compare input { position: absolute; left: 0; right: 0; bottom: 0; width: 100%; height: 44px; margin: 0; accent-color: var(--accent); cursor: ew-resize; background: transparent; }
-.card:not(.done) .compare input { display: none; }
 .meta { padding: 0.9rem 1rem 1.1rem; }
 .name { margin: 0; font-weight: 600; overflow-wrap: anywhere; }
 .state { margin: 0.2rem 0 0.8rem; font-size: 0.95rem; }
+.start-row { display: flex; flex-wrap: wrap; gap: 0.75rem 1.25rem; align-items: center; margin: 1rem 0 0.25rem; }
+.button.start { min-height: 52px; padding: 0.7rem 1.6rem; font-size: 1.1rem; }
+.bar { height: 10px; overflow: hidden; border-radius: 999px; background: var(--line); }
+.bar > span { display: block; width: var(--value, 0%); height: 100%; background: var(--accent); transition: width 0.3s; }
+.bar.overall { flex: 1 1 14rem; height: 12px; }
+.meta .bar { margin: 0 0 0.8rem; }
+.card.failed .bar > span { background: #7c2d12; }
+@media (max-width: 30rem) { .button.start { flex: 1 1 100%; justify-content: center; } }
 .info { margin-top: 3rem; padding-top: 1.5rem; border-top: 1px solid var(--line); }
 .info p { color: var(--muted); }
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }

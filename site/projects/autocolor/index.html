@@ -26,7 +26,7 @@
 
   <section id="drop" class="drop" aria-labelledby="add-title">
     <h2 id="add-title">Add photos</h2>
-    <p class="muted">Drop photos here or choose them. JPEG, PNG and WebP work everywhere. HEIC works where your browser can open it.</p>
+    <p class="muted">Drop photos here or choose them. They wait in the list below until you press Start correcting. JPEG, PNG and WebP work everywhere. HEIC works where your browser can open it.</p>
     <div class="actions">
       <button id="pick" class="button primary" type="button">
         <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M12 16V4m0 0L7 9m5-5 5 5M4 16v4h16v-4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
@@ -41,6 +41,13 @@
     <p id="drive-note" class="muted small">Google Drive input will be available once it is set up.</p>
   </section>
 
+  <div class="start-row">
+    <button id="start" class="button primary start" type="button" disabled aria-describedby="status">
+      <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M8 5v14l11-7z" fill="currentColor"/></svg>
+      Start correcting
+    </button>
+    <div id="overall" class="bar overall" role="progressbar" aria-label="Overall progress" aria-valuemin="0" aria-valuemax="0" aria-valuenow="0" hidden><span></span></div>
+  </div>
   <p id="status" class="status" role="status" aria-live="polite"></p>
   <button id="reconnect" class="button" type="button" hidden>Reconnect Google Drive</button>
 
@@ -80,6 +87,8 @@
     <div class="meta">
       <p class="name"></p>
       <p class="state muted"></p>
+      <div class="bar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" hidden><span></span></div>
+      <button class="button remove" type="button" hidden>Remove</button>
       <a class="button download" hidden>
         <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M12 4v12m0 0-5-5m5 5 5-5M4 20h16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
         Download

@@ -1,4 +1,4 @@
-// Page controller: input (files, drop, Drive), the queue, result cards, downloads and the zip.
+// Page controller: input (files, drop, Drive), the ready list and Start, progress, result cards, downloads and the zip.
 import { outputName, uniqueNames, classify, MESSAGES } from './names.js';
 import { createQueue } from './queue.js';
 import { createZip, crc32 } from './zip.js';
@@ -28,19 +28,61 @@ function summary(r) {
   return `${text[0].toUpperCase()}${text.slice(1)}.`;
 }
 
+// per photo progress: the engine is one WASM call, so the bar moves in stage steps
+const STAGES = {
+  waiting: [0, 'Waiting'],
+  downloading: [5, 'Downloading from Google Drive'],
+  reading: [15, 'Reading'],
+  correcting: [35, 'Analysing and correcting'],
+  saving: [85, 'Saving'],
+};
+
+function setBar(bar, now, max, text) {
+  bar.hidden = false;
+  bar.setAttribute('aria-valuemax', max);
+  bar.setAttribute('aria-valuenow', now);
+  bar.setAttribute('aria-valuetext', text);
+  bar.style.setProperty('--value', `${max ? (now / max) * 100 : 0}%`);
+}
+
+function setStage(card, stage) {
+  const [value, label] = STAGES[stage];
+  card.querySelector('.state').textContent = label;
+  setBar(card.querySelector('.bar'), value, 100, label);
+}
+
 function addCard(name) {
   const li = $('#card-template').content.firstElementChild.cloneNode(true);
   li.querySelector('.name').textContent = name;
-  li.querySelector('.state').textContent = 'Waiting';
+  li.querySelector('.bar').setAttribute('aria-label', `Progress: ${name}`);
   $('#results').append(li);
   $('#results-section').hidden = false;
   return li;
+}
+
+/** A card that waits for Start, with a Remove button. */
+function addReadyCard(job) {
+  const card = (job.card = addCard(job.name));
+  card.classList.add('ready');
+  card.querySelector('.state').textContent = 'Ready';
+  const remove = card.querySelector('.remove');
+  remove.hidden = false;
+  remove.setAttribute('aria-label', `Remove ${job.name}`);
+  remove.addEventListener('click', () => {
+    if (!queue.remove(job)) return;
+    card.remove();
+    $('#results-section').hidden = !$('#results').children.length;
+    $('#start').focus();
+  });
+  return job;
 }
 
 function fail(card, message) {
   card.classList.add('failed');
   card.querySelector('.state').textContent = message;
   card.querySelector('.compare').remove();
+  const bar = card.querySelector('.bar');
+  if (!bar.hidden) setBar(bar, 100, 100, 'Failed');
 }
 
 function showResult(card, job, r) {
@@ -56,6 +98,7 @@ function showResult(card, job, r) {
   range.setAttribute('aria-label', `Compare original and corrected: ${job.name}`);
   range.addEventListener('input', () => compare.style.setProperty('--pos', `${range.value}%`));
   card.querySelector('.state').textContent = `${summary(r.report)} ${r.w} x ${r.h}.`;
+  setBar(card.querySelector('.bar'), 100, 100, 'Corrected');
   const a = card.querySelector('.download');
   a.href = URL.createObjectURL(r.out);
   a.download = name;
@@ -65,19 +108,29 @@ function showResult(card, job, r) {
   card.classList.add('done');
 }
 
+let corrected = 0; // photos corrected in the current run
+const photos = (n) => `${n} ${n === 1 ? 'photo' : 'photos'}`;
+
 const queue = createQueue(
   async (job) => {
-    job.card.querySelector('.state').textContent = job.drive ? 'Downloading from Google Drive' : 'Correcting';
+    if (job.drive) setStage(job.card, 'downloading');
     const blob = await job.getBlob();
-    job.card.querySelector('.state').textContent = 'Correcting';
-    const r = await engine.correct(blob, job.kind);
+    const r = await engine.correct(blob, job.kind, (stage) => setStage(job.card, stage));
     if (!r.ok) throw new Error(r.message);
     return r;
   },
   {
-    onProgress: ({ done, total }) => {
-      $('#clear').disabled = done < total;
-      $('#status').textContent = done < total ? `Correcting ${done + 1} of ${total}` : `Done: ${results.length} of ${total} photos corrected`;
+    onProgress: ({ done, total, state, ready }) => {
+      $('#start').disabled = state !== 'ready';
+      $('#clear').disabled = state === 'running' || state === 'paused';
+      const overall = $('#overall');
+      if (total) setBar(overall, done, total, `${done} of ${total} corrected`);
+      else overall.hidden = true;
+      const status = $('#status');
+      if (state === 'running') status.textContent = `Correcting ${done + 1} of ${total}`;
+      else if (state === 'done') status.textContent = `Done: ${corrected} of ${total} photos corrected`;
+      else if (state === 'ready') status.textContent = `${total ? `Done: ${corrected} of ${total} photos corrected. ` : ''}${photos(ready)} ready. Press Start correcting.`;
+      else if (state === 'empty') status.textContent = '';
     },
     onResult: async (job, r, error) => {
       if (error?.name === 'DriveAuthError') {
@@ -90,6 +143,7 @@ const queue = createQueue(
       if (error) return fail(job.card, error.message);
       const data = new Uint8Array(await r.out.arrayBuffer());
       results.push({ name: outputName(job.name), blob: r.out, crc: crc32(data), size: data.length });
+      corrected++;
       showResult(job.card, job, r);
       $('#zip').disabled = false;
     },
@@ -100,12 +154,22 @@ function addFiles(files) {
   const jobs = [];
   for (const file of files) {
     const kind = classify(file.name, file.type);
-    const card = addCard(file.name);
-    if (kind === 'raw' || kind === 'unsupported') fail(card, MESSAGES[kind]);
-    else jobs.push({ name: file.name, kind, card, getBlob: async () => file });
+    if (kind === 'raw' || kind === 'unsupported') fail(addCard(file.name), MESSAGES[kind]);
+    else jobs.push(addReadyCard({ name: file.name, kind, getBlob: async () => file }));
   }
   queue.add(jobs);
 }
+
+$('#start').addEventListener('click', () => {
+  if (queue.state !== 'ready') return;
+  corrected = 0;
+  for (const card of document.querySelectorAll('#results .card.ready')) {
+    card.classList.remove('ready');
+    card.querySelector('.remove').hidden = true;
+    setStage(card, 'waiting');
+  }
+  queue.start();
+});
 
 $('#pick').addEventListener('click', () => $('#file').click());
 $('#file').addEventListener('change', (e) => {
@@ -145,7 +209,6 @@ $('#clear').addEventListener('click', () => {
   results.length = 0;
   $('#zip').disabled = true;
   $('#results-section').hidden = true;
-  $('#status').textContent = '';
 });
 
 // Google Drive
@@ -161,11 +224,7 @@ driveButton.addEventListener('click', async () => {
   try {
     const d = await getDrive();
     const files = await d.pick();
-    const jobs = files.map((f) => {
-      const kind = classify(f.name, f.mimeType);
-      return { name: f.name, kind, drive: true, card: addCard(f.name), getBlob: () => d.download(f) };
-    });
-    queue.add(jobs);
+    queue.add(files.map((f) => addReadyCard({ name: f.name, kind: classify(f.name, f.mimeType), drive: true, getBlob: () => d.download(f) })));
   } catch (e) {
     $('#status').textContent = `Google Drive: ${e.message}`;
   }
