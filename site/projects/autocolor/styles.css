@@ -1,0 +1,84 @@
+:root {
+  color-scheme: dark;
+  --bg: #0d0b09;
+  --card: #17130f;
+  --line: #2a241d;
+  --fg: #f5efe6;
+  --muted: #b3a89a;
+  --accent: #fb923c;
+}
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+html { -webkit-text-size-adjust: 100%; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--fg);
+  font: 17px/1.6 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+}
+a { color: var(--accent); text-underline-offset: 3px; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 6px; }
+.skip { position: absolute; left: 1rem; top: -3rem; padding: 0.5rem 1rem; background: var(--card); border-radius: 8px; }
+.skip:focus { top: 1rem; }
+.top, main { max-width: 60rem; margin: 0 auto; padding: 0 1.25rem; }
+.top { padding-top: 2rem; }
+.back { color: var(--muted); }
+main { padding-bottom: 4rem; }
+.kicker { margin: 2rem 0 0; color: var(--accent); font-size: 0.8rem; letter-spacing: 0.12em; text-transform: uppercase; }
+h1 { display: flex; align-items: center; gap: 0.6rem; margin: 0.3rem 0 0.75rem; font-size: clamp(2rem, 6vw, 2.75rem); line-height: 1.1; }
+.logo { width: 0.9em; height: 0.9em; color: var(--accent); }
+h2 { margin: 0 0 0.4rem; font-size: 1.25rem; }
+.lead, .muted { color: var(--muted); }
+.small { font-size: 0.9rem; }
+.drop {
+  margin: 2rem 0 1rem;
+  padding: 1.5rem;
+  border: 2px dashed var(--line);
+  border-radius: 16px;
+  background: var(--card);
+  transition: border-color 0.15s;
+}
+.drop.over { border-color: var(--accent); }
+.actions { display: flex; flex-wrap: wrap; gap: 0.75rem; align-items: center; }
+.button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-height: 44px;
+  padding: 0.55rem 1.1rem;
+  border: 1px solid var(--accent);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--accent);
+  font: inherit;
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+}
+.button svg { width: 1.2em; height: 1.2em; }
+.button.primary { background: var(--accent); color: #1a0f05; }
+.button:hover:not(:disabled) { filter: brightness(1.1); }
+.button:disabled { border-color: var(--line); color: var(--muted); background: transparent; cursor: not-allowed; }
+.visually-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.status { min-height: 1.6em; color: var(--fg); font-weight: 600; }
+.results-head { display: flex; flex-wrap: wrap; gap: 1rem; align-items: center; justify-content: space-between; margin: 1rem 0; }
+.results { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 22rem), 1fr)); gap: 1.25rem; align-items: start; margin: 0; padding: 0; list-style: none; }
+.card { overflow: hidden; border: 1px solid var(--line); border-radius: 14px; background: var(--card); }
+.card.failed { border-color: #7c2d12; }
+.compare { position: relative; aspect-ratio: 4 / 3; background: #000; }
+.compare img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; }
+.compare img:not([src]) { visibility: hidden; }
+.compare .before { clip-path: inset(0 calc(100% - var(--pos)) 0 0); }
+.compare::after { content: ""; position: absolute; top: 0; bottom: 0; left: var(--pos); width: 2px; background: var(--fg); opacity: 0.8; pointer-events: none; }
+.card:not(.done) .compare::after, .card:not(.done) .tag { display: none; }
+.tag { position: absolute; top: 0.5rem; padding: 0.1rem 0.5rem; border-radius: 999px; background: rgba(13, 11, 9, 0.8); color: var(--fg); font-size: 0.75rem; }
+.tag.left { left: 0.5rem; }
+.tag.right { right: 0.5rem; }
+.compare input { position: absolute; left: 0; right: 0; bottom: 0; width: 100%; height: 44px; margin: 0; accent-color: var(--accent); cursor: ew-resize; background: transparent; }
+.card:not(.done) .compare input { display: none; }
+.meta { padding: 0.9rem 1rem 1.1rem; }
+.name { margin: 0; font-weight: 600; overflow-wrap: anywhere; }
+.state { margin: 0.2rem 0 0.8rem; font-size: 0.95rem; }
+.info { margin-top: 3rem; padding-top: 1.5rem; border-top: 1px solid var(--line); }
+.info p { color: var(--muted); }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
