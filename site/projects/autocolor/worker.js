@@ -1,6 +1,7 @@
 // Decodes, corrects and encodes one photo at a time off the main thread.
 import { loadEngine } from './engine.js';
 import { MESSAGES } from './names.js';
+import { probeReadback, judgeReadback } from './readback.js';
 
 const FULL_LIMIT_DESKTOP = 12e6;
 const FULL_LIMIT_PHONE = 4e6;
@@ -30,7 +31,9 @@ async function preview(canvas) {
   return c.convertToBlob({ type: 'image/jpeg', quality: 0.85 });
 }
 
-async function processPhoto({ blob, kind, phone }) {
+async function processPhoto({ id, blob, kind, phone }) {
+  const stage = (name) => self.postMessage({ id, stage: name });
+  stage('reading');
   const bitmap = await decode(blob, kind);
   const { width: w, height: h } = bitmap;
   const mp = (w * h) / 1e6;
@@ -40,13 +43,11 @@ async function processPhoto({ blob, kind, phone }) {
   }
   const canvas = new OffscreenCanvas(w, h);
   const ctx = canvas.getContext('2d', { willReadFrequently: true });
-  // browsers that cannot hold a canvas this large give blank pixels instead of failing
-  ctx.fillStyle = '#010203';
-  ctx.fillRect(w - 1, h - 1, 1, 1);
-  const probe = ctx.getImageData(w - 1, h - 1, 1, 1).data;
-  if (probe[0] !== 1 || probe[2] !== 3) {
+  // a level or two of read back noise (fingerprinting protection) is fine. See readback.js
+  const readback = judgeReadback(w, h, probeReadback(ctx, w, h));
+  if (readback !== 'ok') {
     bitmap.close();
-    throw new UserError(`This photo is ${mp.toFixed(1)} MP, which is more than this browser can handle. Try a desktop browser.`);
+    throw new UserError(readback === 'too-big' ? `This photo is ${mp.toFixed(1)} MP, which is more than this browser can hold in memory. Try a smaller photo.` : MESSAGES.blocked);
   }
   // transparent areas become white (JPEG has no alpha)
   ctx.fillStyle = '#fff';
@@ -54,6 +55,7 @@ async function processPhoto({ blob, kind, phone }) {
   ctx.drawImage(bitmap, 0, 0);
   bitmap.close();
 
+  stage('correcting');
   const before = await preview(canvas);
   const img = ctx.getImageData(0, 0, w, h);
   const limit = phone ? FULL_LIMIT_PHONE : FULL_LIMIT_DESKTOP;
@@ -69,6 +71,7 @@ async function processPhoto({ blob, kind, phone }) {
     path = 1;
     report = (await getEngine()).correct(img.data, w, h, path);
   }
+  stage('saving');
   ctx.putImageData(img, 0, 0);
   const out = await canvas.convertToBlob({ type: 'image/jpeg', quality: 0.92 });
   const after = await preview(canvas);
