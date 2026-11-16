@@ -1,0 +1,25 @@
+// Cloudflare Worker for the social hub (docs/egm/2026-11-16_social-hub.md).
+// Secrets (never in git): INSTAGRAM_TOKEN. Set with `npx wrangler secret put <NAME>`.
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "harish-social",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-11-01",
+  "observability": { "enabled": true },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "harish-social",
+      // Replaced with the real id after `npx wrangler d1 create harish-social` (go-live phase).
+      "database_id": "00000000-0000-0000-0000-000000000000",
+      "migrations_dir": "migrations"
+    }
+  ],
+  "vars": {
+    "ALLOWED_ORIGINS": "https://harishkumartn.in,http://localhost:5173",
+    // Filled in during go-live from the Cloudflare Access application. Empty means every /admin request is refused.
+    "ACCESS_TEAM_DOMAIN": "",
+    "ACCESS_AUD": "",
+    "ADMIN_EMAIL": "hello.harishkumartn@gmail.com"
+  }
+}
