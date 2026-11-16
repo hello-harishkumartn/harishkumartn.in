@@ -31,7 +31,7 @@ npm run preview    # serve the built dist/ locally
 | Markets | `markets.learnings` (3 "Coming soon" learnings). Learnings only: no positions or tips. The not-financial-advice note is `markets.disclaimer`. |
 | Badminton | `badminton.videos` (3 empty video slots) |
 | Travel | `travel.stories` (4 cards with generated gradient art) |
-| Social highlights | `social.posts` (3 empty embed slots) |
+| Social feed | Nothing here: posts come from the social hub API (see "Social feed" below). Set `social.api` at go-live. |
 
 ---
 
@@ -68,13 +68,12 @@ photo: { src: 'media/about/me.jpg', alt: 'Me at the beach' },
 
 If both are set, `youtubeId` wins.
 
-**Social highlights.** Auto-syncing feeds isn't realistic (the Instagram, LinkedIn and X APIs are closed or paid), so you hand-pick posts instead:
+**Social feed.** Posts are not in `content.ts`. They come from the social hub Worker in `../api/` (spec: `../docs/egm/2026-11-16_social-hub.md`):
 
-- `url` is the normal public link to the post, shown as "View on …".
-- `embedUrl` is optional. If you set it, the post shows inline in an iframe:
-  - **Instagram:** the post URL with `embed` added, e.g. `https://www.instagram.com/p/POST_ID/embed`
-  - **LinkedIn:** on the post, open **⋯ → Embed this post** and copy the `src` from the iframe it gives you (it looks like `https://www.linkedin.com/embed/feed/update/urn:li:share:…`).
-  - **X:** X has no simple iframe URL, so just set `url` and leave `embedUrl` empty.
+- **YouTube** syncs on its own every 30 minutes.
+- **LinkedIn, X and Instagram:** share the post to the admin page (`<worker>/admin`, behind Cloudflare Access). On Android, install the admin page once and it appears in the Share menu; anywhere else, paste the link there. A note is optional.
+- The home "Highlights" section shows the latest 3 posts per side and links to the full `/social/` page (`social/index.html`, a second Vite entry that never loads the 3D scene).
+- `social.api` in `content.ts` is the Worker URL. While it is empty, both places show the profile links instead of posts. For local work run the Worker (`cd ../api && npx wrangler dev`) and start this site with `VITE_SOCIAL_API=http://localhost:8787 npm run dev`.
 
 ---
 

@@ -177,3 +177,21 @@ test('a life folder in the build never overwrites site/life', () => {
   syncSite({ distDir: dist, siteDir: site, previewDir: preview });
   assert.equal(read(site, 'life', 'index.html'), 'life');
 });
+
+test('the chunk check also walks other HTML entries such as social/index.html', () => {
+  const { dist, site, preview } = fullFixture();
+  write(path.join(dist, 'index.html'), '<script type="module" src="/assets/index-NEWW1234.js"></script>');
+  write(path.join(dist, 'assets', 'index-NEWW1234.js'), 'export {}');
+  write(path.join(dist, 'social', 'index.html'), '<script type="module" src="/assets/social-SSSS1234.js"></script>');
+  assert.throws(() => syncSite({ distDir: dist, siteDir: site, previewDir: preview }), /social-SSSS1234\.js/);
+  write(path.join(dist, 'assets', 'social-SSSS1234.js'), 'import("./Feed-FFFF1234.js")');
+  write(path.join(dist, 'assets', 'Feed-FFFF1234.js'), 'export {}');
+  syncSite({ distDir: dist, siteDir: site, previewDir: preview });
+  assert.equal(read(site, 'social', 'index.html'), '<script type="module" src="/assets/social-SSSS1234.js"></script>');
+});
+
+test('the chunk check skips the protected folders, which have their own scripts', () => {
+  const { dist, site, preview } = fullFixture();
+  write(path.join(site, 'life', 'index.html'), '<script src="./assets/whatever-ZZZZ1234.js"></script>');
+  syncSite({ distDir: dist, siteDir: site, previewDir: preview });
+});

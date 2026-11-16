@@ -13,5 +13,12 @@ export default defineConfig({
   },
   build: {
     chunkSizeWarningLimit: 2600,
+    rollupOptions: {
+      // Two pages: the 3D home page and the lightweight /social/ feed page.
+      input: {
+        main: fileURLToPath(new URL('./index.html', import.meta.url)),
+        social: fileURLToPath(new URL('./social/index.html', import.meta.url)),
+      },
+    },
   },
 });

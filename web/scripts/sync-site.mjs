@@ -60,9 +60,13 @@ function writeBuildFile(src, dest) {
 const filesUnder = (dir) =>
   fs.readdirSync(dir, { recursive: true }).filter((rel) => fs.statSync(path.join(dir, rel)).isFile());
 
+/** Every HTML page the build owns: index.html plus entries such as social/index.html, not the protected folders. */
+const htmlEntries = (siteDir) =>
+  filesUnder(siteDir).filter((rel) => rel.endsWith('.html') && !['assets', ...PROTECTED_DIRS].includes(rel.split(path.sep)[0]));
+
 /**
- * Follows imports from index.html through site/assets/ and returns the chunk names that are
- * referenced but missing. Catches a sync that left the page pointing at chunks it did not write.
+ * Follows imports from every HTML entry through site/assets/ and returns the chunk names that are
+ * referenced but missing. Catches a sync that left a page pointing at chunks it did not write.
  */
 export function missingChunks(siteDir) {
   const assets = path.join(siteDir, 'assets');
@@ -72,7 +76,7 @@ export function missingChunks(siteDir) {
   const refs = (text) => [...text.matchAll(re)].map((m) => m[1]);
   const seen = new Set();
   const missing = new Set();
-  const queue = refs(fs.readFileSync(path.join(siteDir, 'index.html'), 'utf8'));
+  const queue = htmlEntries(siteDir).flatMap((rel) => refs(fs.readFileSync(path.join(siteDir, rel), 'utf8')));
   while (queue.length) {
     const name = queue.pop();
     if (seen.has(name)) continue;

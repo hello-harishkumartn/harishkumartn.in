@@ -97,21 +97,6 @@ export interface TravelStory extends MaybePlaceholder {
   palette: [string, string];
 }
 
-export type SocialPlatform = 'instagram' | 'linkedin' | 'x';
-
-export interface SocialPost extends MaybePlaceholder {
-  platform: SocialPlatform;
-  /** Public link to the post (opens in a new tab). */
-  url?: string;
-  /**
-   * Optional iframe embed URL. See README.md → "Social highlights" for how to get one.
-   * e.g. Instagram: https://www.instagram.com/p/<id>/embed
-   *      LinkedIn:  https://www.linkedin.com/embed/feed/update/urn:li:share:<id>
-   */
-  embedUrl?: string;
-  caption: string;
-}
-
 /** Icon shown on a contact card. Contact.tsx maps each one to an icon component. */
 export type ContactIcon = 'mail' | 'linkedin' | 'instagram' | 'x' | 'youtube';
 
@@ -390,33 +375,26 @@ export const travel = {
   ]),
 };
 
+/**
+ * The live social feed (home section and the /social/ page). Posts come from the social hub API
+ * in api/, not from this file: YouTube syncs on its own, LinkedIn, X and Instagram are shared in /admin.
+ */
 export const social = {
   kicker: 'Highlights',
-  title: 'Social highlights',
-  intro: 'A few hand-picked posts from around the internet.',
-  posts: list<SocialPost>([
-    {
-      platform: 'linkedin',
-      url: '',
-      embedUrl: '',
-      caption: 'Coming soon: a LinkedIn post.',
-      placeholder: true,
-    },
-    {
-      platform: 'instagram',
-      url: '',
-      embedUrl: '',
-      caption: 'Coming soon: an Instagram post.',
-      placeholder: true,
-    },
-    {
-      platform: 'x',
-      url: '',
-      embedUrl: '',
-      caption: 'Coming soon: a post on X.',
-      placeholder: true,
-    },
-  ]),
+  title: "What I'm posting",
+  intro: 'The latest from LinkedIn and X on the work side, and Instagram and YouTube on the personal side.',
+  /**
+   * The social hub Worker, e.g. https://harish-social.<account>.workers.dev. Empty until it is
+   * deployed; while empty the feed shows the profile links instead of posts.
+   * VITE_SOCIAL_API overrides it for local development.
+   */
+  api: '',
+  /** Posts per side in the home section. */
+  homeCount: 3,
+  page: {
+    title: 'Everything I post',
+    intro: 'Work notes from LinkedIn and X, and the badminton, trips and everything else from Instagram and YouTube. Newest first.',
+  },
 };
 
 export const contact = {
