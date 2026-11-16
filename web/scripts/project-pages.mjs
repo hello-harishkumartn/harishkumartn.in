@@ -56,6 +56,7 @@ function layout({ title, description, body }) {
 ${MARKER}
 <title>${esc(title)}</title>
 <meta name="description" content="${esc(description)}">
+<link rel="icon" type="image/svg+xml" href="/favicon.svg">
 <link rel="stylesheet" href="/projects/projects.css">
 </head>
 <body>

@@ -93,3 +93,11 @@ test('the AutoColor app is committed at its project page and the generator leave
   writeProjectPages(dir);
   assert.equal(fs.readFileSync(path.join(dir, 'projects', 'autocolor', 'index.html'), 'utf8'), 'the app');
 });
+
+test('every html page links the site favicon, which site/ actually ships', () => {
+  for (const [rel, body] of Object.entries(pages)) {
+    if (!rel.endsWith('.html')) continue;
+    assert.ok(body.includes('<link rel="icon" type="image/svg+xml" href="/favicon.svg">'), rel);
+  }
+  assert.ok(fs.existsSync(path.join(siteDir, 'favicon.svg')));
+});
