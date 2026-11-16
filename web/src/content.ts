@@ -112,7 +112,11 @@ export interface SocialPost extends MaybePlaceholder {
   caption: string;
 }
 
+/** Icon shown on a contact card. Contact.tsx maps each one to an icon component. */
+export type ContactIcon = 'mail' | 'linkedin' | 'instagram' | 'x' | 'youtube';
+
 export interface ContactLink {
+  icon: ContactIcon;
   label: string;
   href: string;
   display: string;
@@ -421,14 +425,34 @@ export const contact = {
   intro: 'Want to catch up, play a game or plan a trip? Drop me a line.',
   links: list<ContactLink>([
     {
+      icon: 'mail',
       label: 'Email',
       href: 'mailto:hello.harishkumartn@gmail.com',
       display: 'hello.harishkumartn@gmail.com',
     },
     {
+      icon: 'linkedin',
       label: 'LinkedIn',
-      href: 'https://www.linkedin.com/in/harish-kumar-tn',
+      href: 'https://www.linkedin.com/in/harish-kumar-tn/',
       display: 'in/harish-kumar-tn',
+    },
+    {
+      icon: 'instagram',
+      label: 'Instagram',
+      href: 'https://www.instagram.com/harish_kumar_tn/',
+      display: '@harish_kumar_tn',
+    },
+    {
+      icon: 'x',
+      label: 'X',
+      href: 'https://x.com/harish_kumar_tn',
+      display: '@harish_kumar_tn',
+    },
+    {
+      icon: 'youtube',
+      label: 'YouTube',
+      href: 'https://www.youtube.com/@harishkumar_tn',
+      display: '@harishkumar_tn',
     },
   ]),
 };

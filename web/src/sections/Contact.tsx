@@ -1,14 +1,23 @@
 import { m } from 'framer-motion';
-import { ArrowUpRight, BriefcaseBusiness, Mail } from 'lucide-react';
-import { contact, hero, site } from '../content';
+import { ArrowUpRight, AtSign, BriefcaseBusiness, Camera, CirclePlay, Mail, type LucideIcon } from 'lucide-react';
+import { contact, hero, site, type ContactIcon } from '../content';
 import { revealItem, Section } from '../components/Section';
+
+// lucide v1 has no brand logos, so each platform gets a plain icon; the card label names it.
+const icons: Record<ContactIcon, LucideIcon> = {
+  mail: Mail,
+  linkedin: BriefcaseBusiness,
+  instagram: Camera,
+  x: AtSign,
+  youtube: CirclePlay,
+};
 
 export function Contact() {
   return (
     <Section id="contact" kicker={contact.kicker} title={contact.title} intro={contact.intro}>
       <div className="grid gap-4 md:grid-cols-2">
         {contact.links.map((l) => {
-          const Icon = l.href.startsWith('mailto:') ? Mail : BriefcaseBusiness;
+          const Icon = icons[l.icon];
           const ext = l.href.startsWith('http');
           return (
             <m.a
@@ -17,7 +26,8 @@ export function Contact() {
               href={l.href}
               target={ext ? '_blank' : undefined}
               rel={ext ? 'noreferrer' : undefined}
-              className="group flex min-w-0 cursor-pointer items-center justify-between gap-4 rounded-3xl border border-white/[0.08] bg-card p-6 transition-colors duration-200 hover:border-primary/40 md:p-8"
+              aria-label={ext ? `${l.label}: ${l.display} (opens in a new tab)` : undefined}
+              className={`${l.icon === 'mail' ? 'md:col-span-2 ' : ''}group flex min-w-0 cursor-pointer items-center justify-between gap-4 rounded-3xl border border-white/[0.08] bg-card p-6 transition-colors duration-200 hover:border-primary/40 md:p-8`}
             >
               <span className="flex min-w-0 items-center gap-4">
                 <span className="grid size-12 shrink-0 place-items-center rounded-2xl bg-primary/10 text-primary">
