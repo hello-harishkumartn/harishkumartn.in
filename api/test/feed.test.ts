@@ -15,7 +15,7 @@ describe('GET /feed', () => {
     const body = await res.json<{ posts: Record<string, unknown>[]; next: string | null }>();
     expect(body.posts.map((p) => p.id)).toEqual(['linkedin:activity:1', 'youtube:a']);
     expect(Object.keys(body.posts[1]).sort()).toEqual(
-      ['category', 'id', 'kind', 'mediaUrl', 'platform', 'publishedAt', 'source', 'text', 'title', 'url'].sort(),
+      ['category', 'embedUrl', 'id', 'kind', 'mediaUrl', 'platform', 'publishedAt', 'source', 'text', 'title', 'url'].sort(),
     );
     expect(body.posts[1]).toMatchObject({ title: 'Old video', mediaUrl: 'https://i.ytimg.com/vi/a/hq.jpg', publishedAt: iso(1) });
     expect(body.next).toBeNull();
@@ -83,7 +83,7 @@ describe('GET /health and unknown routes', () => {
     const body = await (await call('/health')).json<{ ok: boolean; lastSync: Record<string, unknown> }>();
     expect(body.ok).toBe(true);
     expect(body.lastSync.youtube).toMatchObject({ at: iso(2), ok: true, items: 15 });
-    expect(body.lastSync.instagram).toBeNull();
+    expect(Object.keys(body.lastSync)).toEqual(['youtube']);
   });
 
   it('returns 404 for unknown paths and 405 for writes to /feed', async () => {

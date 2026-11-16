@@ -16,6 +16,17 @@
 | LinkedIn | Curated by hand in the admin page. |
 | Admin protection | Cloudflare Access (Google or email one-time code) in front of `/admin/*`. The Worker also verifies the Access JWT. |
 
+## Revision 2: Instagram is curated, sharing from Android (2026-11-16, overrides everything below)
+
+Harish does not want a professional Instagram account, so the Instagram API is dropped.
+
+- **Instagram is curated** like LinkedIn and X. Accepted links: `instagram.com/p/<code>`, `/reel/<code>`, `/reels/<code>`, `/tv/<code>` and the same with a `/<username>/` prefix. Canonical form `https://www.instagram.com/p/<code>/` (or `/reel/<code>/`). `/p/` is kind `image`, reels and tv are `video`. Category personal.
+- **YouTube stays live.** A pasted YouTube link is refused with a message that YouTube syncs on its own (Sync now forces it).
+- **Text is optional** for every curated post (still at most 3000 characters). Sharing should be one tap plus an optional note.
+- **Phase 3 is now "share and preview"**, replacing Instagram ingestion. No Meta app, no token table use, no R2, no `/media` route. The `tokens` table stays in the schema unused; `/health` reports YouTube only.
+- **Android share sheet.** A public `GET /manifest.webmanifest` (no secrets in it) makes the admin installable, with `scope` and `start_url` `/admin`, an SVG icon at `/icon.svg` and a Web Share Target: `GET /admin/share?title=&text=&url=`. `/admin/share` is behind Access like the rest of `/admin` and opens the admin page with the add form prefilled from the first `https://` link found in `url`, `text` or `title` (apps such as Instagram put the link in `text`). iPhone has no Web Share Target; on any device the admin page itself still works by pasting.
+- **Click-to-load previews.** Each public post carries `embedUrl`, derived from its URL: `https://www.instagram.com/p/<code>/embed` (or `/reel/`), `https://www.linkedin.com/embed/feed/update/urn:li:<type>:<id>`, `https://www.youtube-nocookie.com/embed/<id>` for YouTube, and `null` for X. The frontend (phase 4) shows the note plus a "Show post" button and only loads the iframe on click.
+
 ## Revision after the fresh-context review (2026-11-16, overrides the rest of this doc where they differ)
 
 - **Removals are safe (phase 2 and 3).** They run only after a 200 response that parses to at least one entry. A live post is deleted only after it is missing from 3 good runs in a row (`missing_runs` column). There are tests for a 404, an empty feed and malformed XML.
@@ -210,3 +221,15 @@ The Workers free tier (100,000 requests a day), D1 free (5 GB) and Cron Triggers
 - **Triggers.** Cron `*/30 * * * *` plus `POST /admin/api/sync` and a "Sync now" button on the admin page.
 - **`ADMIN_EMAIL` is now a secret.** It was a plain var in `wrangler.jsonc`. It moves out of the repo and is set with `npx wrangler secret put ADMIN_EMAIL` at go-live. `src/secrets.d.ts` declares it, tests use `owner@example.com`, and `wrangler types` runs with `--strict-vars=false`.
 - **Verified for real.** With `wrangler dev`, the scheduled handler fetched the live channel feed (ok, 0 items) and a seeded fake video was removed on the third run while a curated LinkedIn post stayed.
+
+## Drift report: phase 3, share and preview (2026-11-16, revision 2 vs code in `api/`)
+
+- **Instagram links.** `parseCuratedUrl` accepts `/p/`, `/reel/`, `/reels/` and `/tv/`, with or without a `/<username>/` prefix, and drops `igsh` and other tracking. `/reel/`, `/reels/` and `/tv/` all map to one id `reel:<code>`, so the same reel pasted two ways is a 409. Ids carry the type (`p:` or `reel:`) so the preview URL can be rebuilt.
+- **Kinds.** Curated LinkedIn and X posts are `text`, Instagram posts `image` and reels `video`. A post that is really a carousel still shows as `image`; the preview shows the real thing.
+- **Notes.** Optional everywhere. Missing, null or blank all store `null`, and an empty edit clears a note.
+- **YouTube links** are refused with "YouTube videos are added automatically. Use Sync now if one is missing."
+- **`embedUrl`** is computed on read by `embedUrlFor()` from the canonical URL, so no column was added. X gets `null`.
+- **Share target.** Public `/manifest.webmanifest` and `/icon.svg` (an SVG shuttlecock, sizes `any`, also marked maskable). `/admin/share` serves the admin page behind Access; its script reuses `firstLink()` from `src/share.ts` by inlining `toString()`, so the page and the tests share one implementation. The admin CSP gained `img-src 'self'` and `manifest-src 'self'`.
+- **Unused schema.** The `tokens` table from phase 1 stays but nothing uses it. `/health` reports YouTube only.
+- **Test gap found and closed.** A shell quoting slip broke the share prefill while all 60 Worker tests still passed, because nothing ran the page's own script. The page was then checked in headless Chrome at phone size against a stub API: Instagram style share text, the add flow and a share with no link.
+- **Not verified yet.** Installing on a real Android phone. Chrome accepts SVG manifest icons, but if the install option does not appear, PNG icons at 192 and 512 px are the fix. Checked at go-live.

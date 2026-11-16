@@ -1,5 +1,5 @@
 import { HttpError } from './http';
-import type { CuratedUrl } from './urls';
+import { embedUrlFor, type CuratedUrl } from './urls';
 
 export type Platform = 'linkedin' | 'x' | 'instagram' | 'youtube';
 export type Category = 'professional' | 'personal';
@@ -36,6 +36,7 @@ export const publicPost = (r: PostRow) => ({
   title: r.title,
   text: r.text,
   mediaUrl: r.media_url,
+  embedUrl: embedUrlFor(r.platform, r.url),
   publishedAt: r.published_at,
 });
 
@@ -73,21 +74,21 @@ export async function getPost(db: D1Database, id: string): Promise<PostRow | nul
   return db.prepare(`SELECT ${COLUMNS} FROM posts WHERE id = ?`).bind(id).first<PostRow>();
 }
 
-export async function insertCurated(db: D1Database, link: CuratedUrl, text: string, publishedAt: string): Promise<PostRow> {
+export async function insertCurated(db: D1Database, link: CuratedUrl, text: string | null, publishedAt: string): Promise<PostRow> {
   const id = `${link.platform}:${link.nativeId}`;
   const now = new Date().toISOString();
   const res = await db
     .prepare(
       `INSERT INTO posts (id, platform, category, source, url, kind, text, published_at, created_at, updated_at)
-       VALUES (?, ?, ?, 'curated', ?, 'text', ?, ?, ?, ?) ON CONFLICT (id) DO NOTHING`,
+       VALUES (?, ?, ?, 'curated', ?, ?, ?, ?, ?, ?) ON CONFLICT (id) DO NOTHING`,
     )
-    .bind(id, link.platform, PLATFORM_CATEGORY[link.platform], link.url, text, publishedAt, now, now)
+    .bind(id, link.platform, PLATFORM_CATEGORY[link.platform], link.url, link.kind, text, publishedAt, now, now)
     .run();
   if (res.meta.changes === 0) throw new HttpError(409, 'That post is already in the feed.');
   return (await getPost(db, id))!;
 }
 
-export async function updatePost(db: D1Database, id: string, patch: { hidden?: boolean; text?: string }): Promise<PostRow> {
+export async function updatePost(db: D1Database, id: string, patch: { hidden?: boolean; text?: string | null }): Promise<PostRow> {
   const post = await getPost(db, id);
   if (!post) throw new HttpError(404, 'No such post.');
   if (patch.text !== undefined && post.source !== 'curated') throw new HttpError(409, 'Only curated posts can be edited. Live posts come from the platform.');
@@ -113,8 +114,9 @@ export interface SyncStatus {
   error: string | null;
 }
 
-export async function latestSyncs(db: D1Database): Promise<Record<'youtube' | 'instagram', SyncStatus | null>> {
-  const out: Record<'youtube' | 'instagram', SyncStatus | null> = { youtube: null, instagram: null };
+/** Latest run per live source. Only YouTube is live; LinkedIn, X and Instagram are curated. */
+export async function latestSyncs(db: D1Database): Promise<Record<'youtube', SyncStatus | null>> {
+  const out: Record<'youtube', SyncStatus | null> = { youtube: null };
   const { results } = await db
     .prepare(
       `SELECT platform, started_at, ok, items, error FROM sync_runs s
@@ -122,7 +124,7 @@ export async function latestSyncs(db: D1Database): Promise<Record<'youtube' | 'i
     )
     .all<{ platform: string; started_at: string; ok: number | null; items: number | null; error: string | null }>();
   for (const r of results) {
-    if (r.platform === 'youtube' || r.platform === 'instagram') {
+    if (r.platform === 'youtube') {
       out[r.platform] = { at: r.started_at, ok: r.ok === 1, items: r.items, error: r.error };
     }
   }

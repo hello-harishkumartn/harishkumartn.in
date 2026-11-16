@@ -6,8 +6,9 @@ import {
   adminPost, deletePost, encodeCursor, insertCurated, latestSyncs, listAll, listFeed, PLATFORM_CATEGORY,
   publicPost, updatePost, type Category, type FeedQuery, type Platform,
 } from './posts';
+import { ICON_SVG, MANIFEST } from './share';
 import { runSync } from './sync';
-import { parseCuratedUrl } from './urls';
+import { isYouTubeUrl, parseCuratedUrl } from './urls';
 
 export interface AppDeps {
   /** Resolves Cloudflare Access signing keys. Remote JWKS in production, a local key set in tests. */
@@ -16,7 +17,7 @@ export interface AppDeps {
   fetch?: typeof fetch;
 }
 
-const PUBLIC_ROUTES = new Set(['/feed', '/health']);
+const PUBLIC_ROUTES = new Set(['/feed', '/health', '/manifest.webmanifest', '/icon.svg']);
 const MAX_TEXT = 3000;
 const FUTURE_SKEW_MS = 10 * 60 * 1000;
 
@@ -30,7 +31,7 @@ export function createApp(deps: AppDeps): ExportedHandler<Env> {
         if (!PUBLIC_ROUTES.has(url.pathname)) throw new HttpError(404, 'Not found.');
         if (request.method === 'OPTIONS') return withCors(preflight(), origin);
         if (request.method !== 'GET') throw new HttpError(405, 'Only GET is allowed.');
-        const res = url.pathname === '/feed' ? await handleFeed(env, url) : await handleHealth(env);
+        const res = await handlePublic(env, url);
         return withCors(res, origin);
       } catch (err) {
         if (err instanceof HttpError) return withCors(errorResponse(err.status, err.message), origin);
@@ -78,6 +79,21 @@ async function handleFeed(env: Env, url: URL): Promise<Response> {
   return json({ posts: rows.map(publicPost), next }, 200, { 'Cache-Control': 'public, max-age=300' });
 }
 
+async function handlePublic(env: Env, url: URL): Promise<Response> {
+  switch (url.pathname) {
+    case '/feed':
+      return handleFeed(env, url);
+    case '/manifest.webmanifest':
+      return new Response(JSON.stringify(MANIFEST), {
+        headers: { 'Content-Type': 'application/manifest+json; charset=utf-8', 'Cache-Control': 'public, max-age=3600' },
+      });
+    case '/icon.svg':
+      return new Response(ICON_SVG, { headers: { 'Content-Type': 'image/svg+xml', 'Cache-Control': 'public, max-age=86400' } });
+    default:
+      return handleHealth(env);
+  }
+}
+
 async function handleHealth(env: Env): Promise<Response> {
   return json({ ok: true, lastSync: await latestSyncs(env.DB) }, 200, { 'Cache-Control': 'public, max-age=60' });
 }
@@ -102,12 +118,12 @@ async function routeAdmin(request: Request, env: Env, url: URL, deps: AppDeps): 
     if (method !== 'POST') throw new HttpError(405, 'Use POST.');
     return json(await runSync(env, { fetch: deps.fetch ?? ((input, init) => fetch(input, init)) }));
   }
-  if (url.pathname === '/admin') {
+  if (url.pathname === '/admin' || url.pathname === '/admin/share') {
     if (method !== 'GET') throw new HttpError(405, 'Only GET is allowed.');
     return new Response(ADMIN_PAGE, {
       headers: {
         'Content-Type': 'text/html; charset=utf-8',
-        'Content-Security-Policy': "default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; connect-src 'self'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'",
+        'Content-Security-Policy': "default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; connect-src 'self'; img-src 'self'; manifest-src 'self'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'",
         'X-Content-Type-Options': 'nosniff',
       },
     });
@@ -124,12 +140,12 @@ async function routeAdmin(request: Request, env: Env, url: URL, deps: AppDeps): 
     const id = decodeURIComponent(match[1]);
     if (method === 'PATCH') {
       const body = await readJson(request);
-      const patch: { hidden?: boolean; text?: string } = {};
+      const patch: { hidden?: boolean; text?: string | null } = {};
       if (body.hidden !== undefined) {
         if (typeof body.hidden !== 'boolean') throw new HttpError(400, 'hidden must be true or false.');
         patch.hidden = body.hidden;
       }
-      if (body.text !== undefined) patch.text = cleanText(body.text);
+      if (body.text !== undefined) patch.text = optionalText(body.text);
       if (patch.hidden === undefined && patch.text === undefined) throw new HttpError(400, 'Nothing to change.');
       return json(adminPost(await updatePost(env.DB, id, patch)));
     }
@@ -143,18 +159,24 @@ async function routeAdmin(request: Request, env: Env, url: URL, deps: AppDeps): 
   throw new HttpError(404, 'Not found.');
 }
 
-function cleanText(value: unknown): string {
-  if (typeof value !== 'string' || !value.trim()) throw new HttpError(400, 'text is required.');
+/** A note is optional: missing, null or blank all mean no note. */
+function optionalText(value: unknown): string | null {
+  if (value === undefined || value === null) return null;
+  if (typeof value !== 'string') throw new HttpError(400, 'text must be a string.');
   const text = value.trim();
+  if (!text) return null;
   if (text.length > MAX_TEXT) throw new HttpError(400, `text must be at most ${MAX_TEXT} characters.`);
   return text;
 }
 
 async function createCurated(request: Request, env: Env): Promise<Response> {
   const body = await readJson(request);
+  if (typeof body.url === 'string' && isYouTubeUrl(body.url)) {
+    throw new HttpError(400, 'YouTube videos are added automatically. Use Sync now if one is missing.');
+  }
   const link = typeof body.url === 'string' ? parseCuratedUrl(body.url) : null;
-  if (!link) throw new HttpError(400, 'url must be a single LinkedIn or X post link.');
-  const text = cleanText(body.text);
+  if (!link) throw new HttpError(400, 'url must be a single LinkedIn, X or Instagram post link.');
+  const text = optionalText(body.text);
 
   let publishedAt = new Date().toISOString();
   if (body.published_at !== undefined && body.published_at !== null && body.published_at !== '') {

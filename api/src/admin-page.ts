@@ -1,3 +1,5 @@
+import { firstLink } from './share';
+
 /**
  * The admin page, served by the Worker at /admin behind Cloudflare Access. Same origin as the API,
  * so the Access cookie covers every call. Post data is only ever written with textContent.
@@ -9,6 +11,9 @@ export const ADMIN_PAGE = `<!doctype html>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex,nofollow">
 <title>Social hub admin</title>
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="icon" href="/icon.svg" type="image/svg+xml">
+<meta name="theme-color" content="#0d0b09">
 <style>
   :root { color-scheme: dark; --bg: #0d0b09; --card: #17130f; --line: #2a241d; --fg: #f5efe6; --muted: #b3a89a; --accent: #fb923c; --bad: #f87171; }
   * { box-sizing: border-box; }
@@ -36,15 +41,15 @@ export const ADMIN_PAGE = `<!doctype html>
 <body>
 <main>
   <h1>Social hub admin</h1>
-  <p class="muted">Add LinkedIn and X posts, hide anything and check the live syncs.</p>
+  <p class="muted">Share a LinkedIn, X or Instagram post here, hide anything and check the YouTube sync. On Android, install this page and it shows up in the Share menu.</p>
   <p id="status" role="status" aria-live="polite"></p>
 
-  <h2>Add a LinkedIn or X post</h2>
+  <h2>Add a post</h2>
   <form id="add">
     <label for="url">Post link</label>
-    <input id="url" name="url" type="url" required placeholder="https://www.linkedin.com/feed/update/urn:li:activity:...">
-    <label for="text">Text to show</label>
-    <textarea id="text" name="text" required maxlength="3000"></textarea>
+    <input id="url" name="url" type="url" required placeholder="https://www.instagram.com/p/...">
+    <label for="text">Note (optional)</label>
+    <textarea id="text" name="text" maxlength="3000"></textarea>
     <label for="date">Posted on (optional, defaults to now)</label>
     <input id="date" name="date" type="datetime-local">
     <button class="primary" type="submit">Add post</button>
@@ -92,7 +97,7 @@ export const ADMIN_PAGE = `<!doctype html>
       el('button', { type: 'button', on: { click: () => change(p.id, { hidden: !p.hidden }) } }, p.hidden ? 'Show' : 'Hide'));
     if (p.source === 'curated') {
       actions.append(
-        el('button', { type: 'button', on: { click: () => edit(p) } }, 'Edit text'),
+        el('button', { type: 'button', on: { click: () => edit(p) } }, 'Edit note'),
         el('button', { type: 'button', on: { click: () => remove(p) } }, 'Delete'));
     }
     return el('li', { class: 'card' + (p.hidden ? ' hidden-post' : '') },
@@ -110,7 +115,7 @@ export const ADMIN_PAGE = `<!doctype html>
     try { await api('/admin/api/posts/' + encodeURIComponent(id), { method: 'PATCH', body: JSON.stringify(patch) }); say('Saved.'); loadPosts(); }
     catch (e) { say(e.message, true); }
   }
-  function edit(p) { const text = prompt('Text to show', p.text || ''); if (text !== null) change(p.id, { text }); }
+  function edit(p) { const text = prompt('Note (leave empty for none)', p.text || ''); if (text !== null) change(p.id, { text }); }
   async function remove(p) {
     if (!confirm('Delete this post from the feed?')) return;
     try { await api('/admin/api/posts/' + encodeURIComponent(p.id), { method: 'DELETE' }); say('Deleted.'); loadPosts(); }
@@ -149,6 +154,16 @@ export const ADMIN_PAGE = `<!doctype html>
     } catch (e) { say(e.message, true); }
     ev.target.disabled = false;
   });
+
+  // Opened from the Android share sheet: prefill the link and let Harish add a note.
+  const firstLink = ${firstLink.toString()};
+  if (location.pathname === '/admin/share') {
+    const q = new URLSearchParams(location.search);
+    const link = firstLink({ url: q.get('url'), text: q.get('text'), title: q.get('title') });
+    if (link) { $('#url').value = link; $('#text').focus(); say('Shared link ready. Add a note if you like, then tap Add post.'); }
+    else say('No https link found in what was shared.', true);
+    history.replaceState(null, '', '/admin');
+  }
 
   loadPosts();
   loadSyncs();

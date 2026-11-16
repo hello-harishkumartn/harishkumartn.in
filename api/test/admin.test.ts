@@ -83,9 +83,9 @@ describe('curated posts', () => {
 
   it('validates the body with 400s', async () => {
     const cases: Record<string, unknown> = {
-      badUrl: { url: 'https://www.instagram.com/p/abc/', text: 'a' },
-      noText: { url: X },
-      blankText: { url: X, text: '   ' },
+      badUrl: { url: 'https://www.instagram.com/harish_kumar_tn/', text: 'a' },
+      noUrl: { text: 'a' },
+      textNotString: { url: X, text: 42 },
       longText: { url: X, text: 'a'.repeat(3001) },
       badDate: { url: X, text: 'a', published_at: 'soon' },
       futureDate: { url: X, text: 'a', published_at: '2099-01-01T00:00:00Z' },
@@ -126,6 +126,31 @@ describe('curated posts', () => {
     await seed({ id: 'youtube:v2' });
     const body = await (await admin('/admin/api/posts')).json<{ posts: { id: string; hidden: boolean }[] }>();
     expect(body.posts.map((p) => [p.id, p.hidden]).sort()).toEqual([['youtube:v1', true], ['youtube:v2', false]]);
+  });
+
+  it('adds an Instagram post with no note as personal, with a click-to-load preview URL', async () => {
+    const res = await admin('/admin/api/posts', { method: 'POST', json: { url: 'https://www.instagram.com/p/DCx7aB-_9Qz/?igsh=abc' } });
+    expect(res.status).toBe(201);
+    expect(await res.json()).toMatchObject({
+      id: 'instagram:p:DCx7aB-_9Qz', platform: 'instagram', category: 'personal', source: 'curated', kind: 'image', text: null,
+      url: 'https://www.instagram.com/p/DCx7aB-_9Qz/', embedUrl: 'https://www.instagram.com/p/DCx7aB-_9Qz/embed',
+    });
+    const reel = await admin('/admin/api/posts', { method: 'POST', json: { url: 'https://www.instagram.com/reel/DCy1Reel123/', text: 'Rally!' } });
+    expect(await reel.json()).toMatchObject({ kind: 'video', text: 'Rally!' });
+  });
+
+  it('treats a blank note as no note, and lets Harish clear a note later', async () => {
+    const res = await admin('/admin/api/posts', { method: 'POST', json: { url: X, text: '   ' } });
+    expect(await res.json()).toMatchObject({ text: null });
+    await admin('/admin/api/posts/x:1857000000000000001', { method: 'PATCH', json: { text: 'note' } });
+    const cleared = await admin('/admin/api/posts/x:1857000000000000001', { method: 'PATCH', json: { text: '' } });
+    expect(await cleared.json()).toMatchObject({ text: null });
+  });
+
+  it('explains that YouTube links sync on their own instead of adding them', async () => {
+    const res = await admin('/admin/api/posts', { method: 'POST', json: { url: 'https://youtu.be/abcDEF12345' } });
+    expect(res.status).toBe(400);
+    expect((await res.json<{ error: string }>()).error).toMatch(/YouTube.*automatically/);
   });
 
   it('serves the admin page as HTML that is never cached', async () => {
