@@ -1,0 +1,4 @@
+# LF everywhere, on every OS, whatever core.autocrlf is set to.
+# The deploy decodes *.b64 with `base64 -d` on Linux and the web/ tests compare generated
+# files byte for byte, so CRLF working copies on Windows break both.
+* text=auto eol=lf
