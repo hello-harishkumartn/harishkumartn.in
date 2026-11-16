@@ -1,23 +1,24 @@
 import { m } from 'framer-motion';
-import { ArrowUpRight, AtSign, BriefcaseBusiness, Camera, CirclePlay, Mail, type LucideIcon } from 'lucide-react';
+import { ArrowUpRight, Mail } from 'lucide-react';
 import { contact, hero, site, type ContactIcon } from '../content';
 import { revealItem, Section } from '../components/Section';
+import { brandIcons } from '../lib/brandIcons';
 
-// lucide v1 has no brand logos, so each platform gets a plain icon; the card label names it.
-const icons: Record<ContactIcon, LucideIcon> = {
-  mail: Mail,
-  linkedin: BriefcaseBusiness,
-  instagram: Camera,
-  x: AtSign,
-  youtube: CirclePlay,
-};
+/** Mail uses lucide; the socials use their official marks (lucide v1 ships no brand logos). */
+function ContactGlyph({ name, className }: { name: ContactIcon; className?: string }) {
+  if (name === 'mail') return <Mail className={className} aria-hidden />;
+  return (
+    <svg viewBox="0 0 24 24" fill="currentColor" className={className} aria-hidden focusable="false">
+      <path d={brandIcons[name].path} />
+    </svg>
+  );
+}
 
 export function Contact() {
   return (
     <Section id="contact" kicker={contact.kicker} title={contact.title} intro={contact.intro}>
       <div className="grid gap-4 md:grid-cols-2">
         {contact.links.map((l) => {
-          const Icon = icons[l.icon];
           const ext = l.href.startsWith('http');
           return (
             <m.a
@@ -31,7 +32,7 @@ export function Contact() {
             >
               <span className="flex min-w-0 items-center gap-4">
                 <span className="grid size-12 shrink-0 place-items-center rounded-2xl bg-primary/10 text-primary">
-                  <Icon className="size-5" aria-hidden />
+                  <ContactGlyph name={l.icon} className={l.icon === 'mail' ? 'size-5' : 'size-[18px]'} />
                 </span>
                 <span className="min-w-0">
                   <span className="block font-mono text-[11px] uppercase tracking-[0.2em] text-muted-foreground">{l.label}</span>

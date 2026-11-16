@@ -83,6 +83,16 @@ PBR materials with bevelled geometry instead.
 | Button (shadcn/ui, as shipped with the hero) | Tommy Jepsen / shadcn | same as above | https://github.com/tommyjepsen/twblocks (`components/ui/button.tsx`) | MIT | `src/components/ui/button.tsx` |
 | Text Shimmer | Julien Thibeaut (ibelick), motion-primitives | https://21st.dev/@ibelick/components/text-shimmer | https://github.com/ibelick/motion-primitives (`components/core/text-shimmer.tsx`) | MIT | `src/components/ui/text-shimmer.tsx` (loading screen) |
 
+## Brand marks (Simple Icons)
+
+Copied as single SVG paths into `src/lib/brandIcons.ts` and drawn in the accent colour on the
+Contact cards. The marks are trademarks of their owners and are used only to link to my profiles.
+
+| Mark | Source | Licence |
+|---|---|---|
+| LinkedIn | https://simpleicons.org (`simple-icons@9.21.0`, `icons/linkedin.svg`; later releases removed it) | CC0 1.0 |
+| Instagram, X, YouTube | https://simpleicons.org (`simple-icons@13.21.0`, `icons/{instagram,x,youtube}.svg`) | CC0 1.0 |
+
 ## Claude Code skill
 
 | Skill | Author | Source | Licence |
