@@ -51,7 +51,7 @@ export const ADMIN_PAGE = `<!doctype html>
   </form>
 
   <h2>Live syncs</h2>
-  <div class="card" id="syncs"><span class="muted">Loading...</span></div>
+  <div class="card"><div id="syncs"><span class="muted">Loading...</span></div><button type="button" id="sync-now">Sync now</button></div>
 
   <h2>All posts</h2>
   <ul id="posts"><li class="muted">Loading...</li></ul>
@@ -137,6 +137,18 @@ export const ADMIN_PAGE = `<!doctype html>
           : el('span', { class: 'muted' }, 'No sync yet'))));
     } catch (e) { box.textContent = e.message; }
   }
+
+  $('#sync-now').addEventListener('click', async (ev) => {
+    ev.target.disabled = true;
+    say('Syncing...');
+    try {
+      const result = await api('/admin/api/sync', { method: 'POST' });
+      const failed = Object.entries(result).filter(([, r]) => !r.ok);
+      say(failed.length ? 'Sync failed for ' + failed.map(([n]) => n).join(' and ') + '.' : 'Synced.', failed.length > 0);
+      loadSyncs(); loadPosts();
+    } catch (e) { say(e.message, true); }
+    ev.target.disabled = false;
+  });
 
   loadPosts();
   loadSyncs();

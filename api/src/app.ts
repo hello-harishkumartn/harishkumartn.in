@@ -6,11 +6,14 @@ import {
   adminPost, deletePost, encodeCursor, insertCurated, latestSyncs, listAll, listFeed, PLATFORM_CATEGORY,
   publicPost, updatePost, type Category, type FeedQuery, type Platform,
 } from './posts';
+import { runSync } from './sync';
 import { parseCuratedUrl } from './urls';
 
 export interface AppDeps {
   /** Resolves Cloudflare Access signing keys. Remote JWKS in production, a local key set in tests. */
   accessKeys: JWTVerifyGetKey;
+  /** Outbound fetch for syncs. Defaults to the global fetch; tests pass a fake. */
+  fetch?: typeof fetch;
 }
 
 const PUBLIC_ROUTES = new Set(['/feed', '/health']);
@@ -83,7 +86,7 @@ async function handleAdmin(request: Request, env: Env, url: URL, deps: AppDeps):
   try {
     await verifyAccess(request, env, deps.accessKeys);
     if (request.method !== 'GET') requireSameOrigin(request);
-    const res = await routeAdmin(request, env, url);
+    const res = await routeAdmin(request, env, url, deps);
     res.headers.set('Cache-Control', 'no-store');
     return res;
   } catch (err) {
@@ -93,8 +96,12 @@ async function handleAdmin(request: Request, env: Env, url: URL, deps: AppDeps):
   }
 }
 
-async function routeAdmin(request: Request, env: Env, url: URL): Promise<Response> {
+async function routeAdmin(request: Request, env: Env, url: URL, deps: AppDeps): Promise<Response> {
   const { method } = request;
+  if (url.pathname === '/admin/api/sync') {
+    if (method !== 'POST') throw new HttpError(405, 'Use POST.');
+    return json(await runSync(env, { fetch: deps.fetch ?? ((input, init) => fetch(input, init)) }));
+  }
   if (url.pathname === '/admin') {
     if (method !== 'GET') throw new HttpError(405, 'Only GET is allowed.');
     return new Response(ADMIN_PAGE, {

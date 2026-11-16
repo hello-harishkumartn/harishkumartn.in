@@ -1,5 +1,6 @@
 import { createRemoteJWKSet, type JWTVerifyGetKey } from 'jose';
 import { createApp } from './app';
+import { runSync } from './sync';
 
 // One key set per isolate. jose caches the team's certs and refetches when a new key id appears.
 let keys: JWTVerifyGetKey | undefined;
@@ -17,5 +18,9 @@ function accessKeys(env: Env): JWTVerifyGetKey {
 export default {
   fetch(request, env, ctx) {
     return createApp({ accessKeys: (header, token) => accessKeys(env)(header, token) }).fetch!(request, env, ctx);
+  },
+  /** Cron Trigger (every 30 minutes, see wrangler.jsonc): pull the live sources. */
+  scheduled(_controller, env, ctx) {
+    ctx.waitUntil(runSync(env, { fetch: (input, init) => fetch(input, init) }));
   },
 } satisfies ExportedHandler<Env>;

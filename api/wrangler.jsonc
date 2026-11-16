@@ -1,11 +1,14 @@
 // Cloudflare Worker for the social hub (docs/egm/2026-11-16_social-hub.md).
-// Secrets (never in git): INSTAGRAM_TOKEN. Set with `npx wrangler secret put <NAME>`.
+// Secrets (never in git): ADMIN_EMAIL (the only account allowed into /admin) and INSTAGRAM_TOKEN.
+// Set each with `npx wrangler secret put <NAME>`. For local dev put them in .dev.vars (gitignored).
 {
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "harish-social",
   "main": "src/index.ts",
   "compatibility_date": "2026-11-01",
   "observability": { "enabled": true },
+  // Pull the live sources every 30 minutes.
+  "triggers": { "crons": ["*/30 * * * *"] },
   "d1_databases": [
     {
       "binding": "DB",
@@ -20,6 +23,7 @@
     // Filled in during go-live from the Cloudflare Access application. Empty means every /admin request is refused.
     "ACCESS_TEAM_DOMAIN": "",
     "ACCESS_AUD": "",
-    "ADMIN_EMAIL": "hello.harishkumartn@gmail.com"
+    // youtube.com/@harishkumar_tn
+    "YOUTUBE_CHANNEL_ID": "UC1LVB92eIBvXml8xUFmm0HQ"
   }
 }

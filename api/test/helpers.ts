@@ -7,7 +7,8 @@ export const SITE = 'https://harishkumartn.in';
 
 const { publicKey, privateKey } = await generateKeyPair('RS256');
 const jwk = { ...(await exportJWK(publicKey)), kid: 'test-key', alg: 'RS256' };
-export const app = createApp({ accessKeys: createLocalJWKSet({ keys: [jwk] }) });
+export const accessKeys = createLocalJWKSet({ keys: [jwk] });
+export const app = createApp({ accessKeys });
 
 /** A Cloudflare Access style JWT. Override any claim to build a bad one. */
 export async function accessToken(overrides: Record<string, unknown> = {}, key = privateKey) {
@@ -22,15 +23,15 @@ export async function accessToken(overrides: Record<string, unknown> = {}, key =
   return new SignJWT(claims).setProtectedHeader({ alg: 'RS256', kid: 'test-key' }).sign(key);
 }
 
-export async function call(path: string, init: RequestInit = {}) {
+export async function call(path: string, init: RequestInit = {}, handler: ExportedHandler<Env> = app) {
   const ctx = createExecutionContext();
-  const res = await app.fetch!(new Request(`${ORIGIN}${path}`, init) as Request<unknown, IncomingRequestCfProperties>, env, ctx);
+  const res = await handler.fetch!(new Request(`${ORIGIN}${path}`, init) as Request<unknown, IncomingRequestCfProperties>, env, ctx);
   await waitOnExecutionContext(ctx);
   return res;
 }
 
 /** An admin call with a valid Access JWT and a same-origin Origin header for writes. */
-export async function admin(path: string, init: RequestInit & { json?: unknown } = {}) {
+export async function admin(path: string, init: RequestInit & { json?: unknown } = {}, handler: ExportedHandler<Env> = app) {
   const headers = new Headers(init.headers);
   headers.set('Cf-Access-Jwt-Assertion', await accessToken());
   if (init.method && init.method !== 'GET') headers.set('Origin', ORIGIN);
@@ -38,7 +39,7 @@ export async function admin(path: string, init: RequestInit & { json?: unknown }
     headers.set('Content-Type', 'application/json');
     init = { ...init, body: JSON.stringify(init.json) };
   }
-  return call(path, { ...init, headers });
+  return call(path, { ...init, headers }, handler);
 }
 
 type Seed = Partial<{

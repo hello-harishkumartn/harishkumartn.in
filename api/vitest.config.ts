@@ -13,6 +13,7 @@ export default defineConfig(async () => {
             TEST_MIGRATIONS: migrations,
             ACCESS_TEAM_DOMAIN: 'https://harish-test.cloudflareaccess.com',
             ACCESS_AUD: 'test-aud',
+            ADMIN_EMAIL: 'owner@example.com',
           },
         },
       }),

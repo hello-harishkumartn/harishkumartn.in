@@ -199,3 +199,14 @@ The Workers free tier (100,000 requests a day), D1 free (5 GB) and Cron Triggers
 - **Delete rules.** `DELETE` only works on curated posts. A live post returns 409 because the next sync would restore it, so it must be hidden instead. `PATCH text` is likewise curated only.
 - **Small additions.** `/health` is cacheable for 60 seconds. The admin page sends a strict CSP and `no-store`. `published_at` may be at most 10 minutes in the future. The Worker refuses every admin request while `ACCESS_TEAM_DOMAIN` or `ACCESS_AUD` is empty.
 - **Not yet built (later phases as planned).** Cron, YouTube and Instagram ingestion, R2 media, the token paste form and the frontend.
+
+## Drift report: phase 2 (2026-11-16, spec vs code in `api/`)
+
+- **Channel.** `YOUTUBE_CHANNEL_ID` is `UC1LVB92eIBvXml8xUFmm0HQ`, read from the canonical link of youtube.com/@harishkumar_tn. The channel has no public videos yet, so the live feed is valid but empty. The feed reports the id without its `UC` prefix, so the parser accepts both forms.
+- **What counts as a good sync.** The review said removals need a response with at least one entry. That would leave a deleted last video in the feed forever, so instead a good sync is any complete feed for this channel, empty or not. HTTP errors, HTML error pages, another channel's feed, garbage and network errors all record a failed run and touch no posts.
+- **Removal window.** The feed holds the newest 15 videos. With fewer than 15 entries the feed is the whole channel and every live YouTube post is in the window. With 15, only posts at least as new as the oldest fetched one are. A post is deleted after 3 good syncs in a row without it; one reappearance resets the count.
+- **Parser.** Workers have no XML parser, so `src/youtube.ts` is a strict extractor for this Atom format with one-pass entity decoding. Bad entries are skipped. Thumbnails are rebuilt as `https://i.ytimg.com/vi/<id>/hqdefault.jpg` instead of trusting the feed.
+- **Query budget.** A sync is one `db.batch()` of 5 statements (upsert through `json_each`, bump missing, delete, record the run, prune runs older than 30 days), well inside the 50 query limit. A test counts them.
+- **Triggers.** Cron `*/30 * * * *` plus `POST /admin/api/sync` and a "Sync now" button on the admin page.
+- **`ADMIN_EMAIL` is now a secret.** It was a plain var in `wrangler.jsonc`. It moves out of the repo and is set with `npx wrangler secret put ADMIN_EMAIL` at go-live. `src/secrets.d.ts` declares it, tests use `owner@example.com`, and `wrangler types` runs with `--strict-vars=false`.
+- **Verified for real.** With `wrangler dev`, the scheduled handler fetched the live channel feed (ok, 0 items) and a seeded fake video was removed on the third run while a curated LinkedIn post stayed.
