@@ -11,9 +11,7 @@ export default defineConfig(async () => {
         miniflare: {
           bindings: {
             TEST_MIGRATIONS: migrations,
-            ACCESS_TEAM_DOMAIN: 'https://harish-test.cloudflareaccess.com',
-            ACCESS_AUD: 'test-aud',
-            ADMIN_EMAIL: 'owner@example.com',
+            ADMIN_PASSWORD: 'test-password-0123456789abcdef',
           },
         },
       }),

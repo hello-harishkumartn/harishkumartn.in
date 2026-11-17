@@ -1,6 +1,6 @@
 // Cloudflare Worker for the social hub (docs/egm/2026-11-16_social-hub.md).
-// Secrets (never in git): ADMIN_EMAIL (the only account allowed into /admin) and INSTAGRAM_TOKEN.
-// Set each with `npx wrangler secret put <NAME>`. For local dev put them in .dev.vars (gitignored).
+// Secret (never in git): ADMIN_PASSWORD, at least 24 characters, unlocks /admin/api.
+// Set it with `npx wrangler secret put ADMIN_PASSWORD`. For local dev put it in .dev.vars (gitignored).
 {
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "harish-social",
@@ -13,16 +13,17 @@
     {
       "binding": "DB",
       "database_name": "harish-social",
-      // Replaced with the real id after `npx wrangler d1 create harish-social` (go-live phase).
-      "database_id": "00000000-0000-0000-0000-000000000000",
+      // Created 2026-11-17 with `npx wrangler d1 create harish-social` (region APAC).
+      "database_id": "5e0cad07-8034-4473-9ba9-e558de94c376",
       "migrations_dir": "migrations"
     }
   ],
+  // Checked before the admin password: 30 admin API calls a minute per client address.
+  "ratelimits": [
+    { "name": "ADMIN_LIMITER", "namespace_id": "1001", "simple": { "limit": 30, "period": 60 } }
+  ],
   "vars": {
     "ALLOWED_ORIGINS": "https://harishkumartn.in,http://localhost:5173",
-    // Filled in during go-live from the Cloudflare Access application. Empty means every /admin request is refused.
-    "ACCESS_TEAM_DOMAIN": "",
-    "ACCESS_AUD": "",
     // youtube.com/@harishkumar_tn
     "YOUTUBE_CHANNEL_ID": "UC1LVB92eIBvXml8xUFmm0HQ"
   }

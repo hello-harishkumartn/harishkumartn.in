@@ -1,39 +1,27 @@
 import { createExecutionContext, env, waitOnExecutionContext } from 'cloudflare:test';
-import { createLocalJWKSet, exportJWK, generateKeyPair, SignJWT } from 'jose';
 import { createApp } from '../src/app';
 
 export const ORIGIN = 'https://harish-social.example.workers.dev';
 export const SITE = 'https://harishkumartn.in';
 
-const { publicKey, privateKey } = await generateKeyPair('RS256');
-const jwk = { ...(await exportJWK(publicKey)), kid: 'test-key', alg: 'RS256' };
-export const accessKeys = createLocalJWKSet({ keys: [jwk] });
-export const app = createApp({ accessKeys });
+export const app = createApp({});
 
-/** A Cloudflare Access style JWT. Override any claim to build a bad one. */
-export async function accessToken(overrides: Record<string, unknown> = {}, key = privateKey) {
-  const claims = {
-    email: env.ADMIN_EMAIL,
-    iss: env.ACCESS_TEAM_DOMAIN,
-    aud: [env.ACCESS_AUD],
-    exp: Math.floor(Date.now() / 1000) + 600,
-    iat: Math.floor(Date.now() / 1000),
-    ...overrides,
-  };
-  return new SignJWT(claims).setProtectedHeader({ alg: 'RS256', kid: 'test-key' }).sign(key);
-}
+/** A fresh client address per call, so the per-IP rate limit never spills between tests. */
+const randomIp = () => `test-${crypto.randomUUID()}`;
 
 export async function call(path: string, init: RequestInit = {}, handler: ExportedHandler<Env> = app) {
   const ctx = createExecutionContext();
-  const res = await handler.fetch!(new Request(`${ORIGIN}${path}`, init) as Request<unknown, IncomingRequestCfProperties>, env, ctx);
+  const headers = new Headers(init.headers);
+  if (!headers.has('CF-Connecting-IP')) headers.set('CF-Connecting-IP', randomIp());
+  const res = await handler.fetch!(new Request(`${ORIGIN}${path}`, { ...init, headers }) as Request<unknown, IncomingRequestCfProperties>, env, ctx);
   await waitOnExecutionContext(ctx);
   return res;
 }
 
-/** An admin call with a valid Access JWT and a same-origin Origin header for writes. */
+/** An admin call with the right password and a same-origin Origin header for writes. */
 export async function admin(path: string, init: RequestInit & { json?: unknown } = {}, handler: ExportedHandler<Env> = app) {
   const headers = new Headers(init.headers);
-  headers.set('Cf-Access-Jwt-Assertion', await accessToken());
+  headers.set('Authorization', `Bearer ${env.ADMIN_PASSWORD}`);
   if (init.method && init.method !== 'GET') headers.set('Origin', ORIGIN);
   if (init.json !== undefined) {
     headers.set('Content-Type', 'application/json');

@@ -1,5 +1,4 @@
-import type { JWTVerifyGetKey } from 'jose';
-import { requireSameOrigin, verifyAccess } from './access';
+import { requirePassword, requireSameOrigin } from './auth';
 import { ADMIN_PAGE } from './admin-page';
 import { allowedOrigin, errorResponse, HttpError, json, readJson, withCors } from './http';
 import {
@@ -11,8 +10,6 @@ import { runSync } from './sync';
 import { isYouTubeUrl, parseCuratedUrl } from './urls';
 
 export interface AppDeps {
-  /** Resolves Cloudflare Access signing keys. Remote JWKS in production, a local key set in tests. */
-  accessKeys: JWTVerifyGetKey;
   /** Outbound fetch for syncs. Defaults to the global fetch; tests pass a fake. */
   fetch?: typeof fetch;
 }
@@ -100,15 +97,17 @@ async function handleHealth(env: Env): Promise<Response> {
 
 async function handleAdmin(request: Request, env: Env, url: URL, deps: AppDeps): Promise<Response> {
   try {
-    await verifyAccess(request, env, deps.accessKeys);
+    // The page shell (/admin, /admin/share) holds no data, so it opens without a password. Every API call needs one.
+    if (url.pathname.startsWith('/admin/api/')) await requirePassword(request, env);
     if (request.method !== 'GET') requireSameOrigin(request);
     const res = await routeAdmin(request, env, url, deps);
     res.headers.set('Cache-Control', 'no-store');
     return res;
   } catch (err) {
-    if (err instanceof HttpError) return errorResponse(err.status, err.message);
-    console.error('Unhandled admin error', err);
-    return errorResponse(500, 'Something went wrong.');
+    const res = err instanceof HttpError ? errorResponse(err.status, err.message) : errorResponse(500, 'Something went wrong.');
+    if (!(err instanceof HttpError)) console.error('Unhandled admin error', err);
+    res.headers.set('Cache-Control', 'no-store');
+    return res;
   }
 }
 

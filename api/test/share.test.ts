@@ -20,12 +20,8 @@ describe('installable admin with an Android share target', () => {
     expect(await res.text()).toContain('<svg');
   });
 
-  it('keeps /admin/share behind Access', async () => {
-    expect((await call('/admin/share?url=https://x.com/a/status/1')).status).toBe(403);
-  });
-
-  it('opens the admin page for a shared link', async () => {
-    const res = await admin('/admin/share?text=' + encodeURIComponent('Look https://www.instagram.com/p/DCx7aB-_9Qz/?igsh=abc'));
+  it('opens the admin page for a shared link without a password, since the page shell holds no data', async () => {
+    const res = await call('/admin/share?text=' + encodeURIComponent('Look https://www.instagram.com/p/DCx7aB-_9Qz/?igsh=abc'));
     expect(res.status).toBe(200);
     expect(res.headers.get('Content-Type')).toContain('text/html');
     expect(await res.text()).toContain('<title>Social hub admin</title>');

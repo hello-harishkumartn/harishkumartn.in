@@ -16,6 +16,18 @@
 | LinkedIn | Curated by hand in the admin page. |
 | Admin protection | Cloudflare Access (Google or email one-time code) in front of `/admin/*`. The Worker also verifies the Access JWT. |
 
+## Revision 3: a password instead of Cloudflare Access (2026-11-17, overrides everything below)
+
+Setting up Zero Trust was too much work for a one-person admin, so Cloudflare Access is dropped. Every mention of Access, the JWT, `ACCESS_TEAM_DOMAIN`, `ACCESS_AUD` and `ADMIN_EMAIL` below is replaced by this.
+
+- **One secret, `ADMIN_PASSWORD`.** A random 32-character password set with `wrangler secret put`. Never in git. If it is missing or shorter than 24 characters every admin API call gets a 403 (fails closed).
+- **The API is locked, the page shell is not.** `/admin/api/*` needs `Authorization: Bearer <password>`, compared in constant time (SHA-256 of both, then `timingSafeEqual`). A wrong or missing password gets a 401. `/admin` and `/admin/share` serve the static page with no data in it, so the Android share target can open it.
+- **The page remembers the password.** The first visit shows a password box. The page keeps the password in `localStorage` on that device and sends it as the bearer header. A 401 clears it and shows the box again. A "Forget on this device" button clears it by hand.
+- **Rate limit.** A Workers rate limit binding (`ADMIN_LIMITER`, 30 requests a minute per `CF-Connecting-IP`) runs before the password check on `/admin/api/*`. Over the limit gets a 429.
+- **Kept:** admin writes still require `Origin` to be the Worker's own origin, `no-store` and the strict CSP.
+- **Removed:** `src/access.ts`, the `jose` dependency, the Access vars and the `ADMIN_EMAIL` secret.
+- **Trade-off accepted:** no second factor. Whoever has the password can add, hide or delete posts on the feed and nothing else. Rotating it is one `wrangler secret put`.
+
 ## Revision 2: Instagram is curated, sharing from Android (2026-11-16, overrides everything below)
 
 Harish does not want a professional Instagram account, so the Instagram API is dropped.
@@ -245,3 +257,9 @@ The Workers free tier (100,000 requests a day), D1 free (5 GB) and Cron Triggers
 - **Bugs found in the browser, not by tests.** (1) The home section stayed on skeletons forever: its effect depended on the status it set, so React's cleanup aborted the fetch it had just started. Fixed by running the effect once and aborting only on unmount. Nothing in the Node suite renders React, so only the headless Chrome run caught it. (2) "Show post" stretched to the card width; now `w-fit`.
 - **Checked in headless Chrome** against the real Worker with seeded posts, at 1366 and 390 px: both tabs, arrow key tab switching, platform filter, deep link restore, click-to-load, home columns, one feed call, no horizontal scroll, no failed requests or console errors. Also with the API down and with no API configured: both pages fall back to the four profile links.
 - **Not done in this phase.** `site/` is not rebuilt, so the live site still shows the old Highlights placeholders until go-live sets `social.api` and runs `npm run build:all`.
+
+## Drift report: revision 3, password admin (2026-11-17, revision 3 vs code in `api/`)
+
+- **As specified.** `src/auth.ts` holds `requirePassword` (fail closed under 24 characters, rate limit, SHA-256 plus `timingSafeEqual`) and `requireSameOrigin`. `/admin/api/*` needs the bearer password; `/admin` and `/admin/share` serve the data-free page. `src/access.ts`, `jose` and the Access vars are gone; `ADMIN_PASSWORD` replaces `ADMIN_EMAIL` in `secrets.d.ts`.
+- **Small additions.** Admin error responses (401, 403, 429) also carry `no-store`. When a share arrives while the page is locked the link is kept and the page asks for the password first. The tests give every call its own `CF-Connecting-IP` so the rate limit never spills between tests.
+- **Tested.** 60 Worker tests, including the 401 cases (missing, wrong, prefix, longer, no scheme, Basic, empty), fail closed with a missing or short secret, and a 429 after 30 calls a minute from one address. A headless Chrome run against `wrangler dev` covered: locked first visit, wrong password, unlock, add a post, reload stays unlocked, share while unlocked, forget, share while locked then unlock. Every `/admin/api` request carried the header and the page threw no errors.

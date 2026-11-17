@@ -1,8 +1,9 @@
 import { firstLink } from './share';
 
 /**
- * The admin page, served by the Worker at /admin behind Cloudflare Access. Same origin as the API,
- * so the Access cookie covers every call. Post data is only ever written with textContent.
+ * The admin page, served by the Worker at /admin. The page itself holds no data: it asks for the admin
+ * password once, keeps it in localStorage on this device and sends it as a bearer token to /admin/api.
+ * Post data is only ever written with textContent.
  */
 export const ADMIN_PAGE = `<!doctype html>
 <html lang="en">
@@ -36,6 +37,8 @@ export const ADMIN_PAGE = `<!doctype html>
   .text { white-space: pre-wrap; overflow-wrap: anywhere; }
   a { color: var(--accent); overflow-wrap: anywhere; }
   #status:empty { display: none; }
+  [hidden] { display: none !important; }
+  .forget { margin-top: 3rem; font-size: .85rem; color: var(--muted); }
 </style>
 </head>
 <body>
@@ -44,6 +47,13 @@ export const ADMIN_PAGE = `<!doctype html>
   <p class="muted">Share a LinkedIn, X or Instagram post here, hide anything and check the YouTube sync. On Android, install this page and it shows up in the Share menu.</p>
   <p id="status" role="status" aria-live="polite"></p>
 
+  <form id="unlock" hidden>
+    <label for="password">Admin password</label>
+    <input id="password" name="password" type="password" autocomplete="current-password" required minlength="24">
+    <button class="primary" type="submit">Unlock</button>
+  </form>
+
+  <div id="app" hidden>
   <h2>Add a post</h2>
   <form id="add">
     <label for="url">Post link</label>
@@ -60,14 +70,36 @@ export const ADMIN_PAGE = `<!doctype html>
 
   <h2>All posts</h2>
   <ul id="posts"><li class="muted">Loading...</li></ul>
+  <button type="button" class="forget" id="forget">Forget password on this device</button>
+  </div>
 </main>
 <script>
   const $ = (s) => document.querySelector(s);
   const status = $('#status');
   const say = (msg, bad) => { status.textContent = msg; status.className = bad ? 'bad' : 'muted'; };
 
+  const KEY = 'adminPassword';
+  const store = {
+    get() { try { return localStorage.getItem(KEY) || ''; } catch { return ''; } },
+    set(v) { try { localStorage.setItem(KEY, v); } catch {} },
+    clear() { try { localStorage.removeItem(KEY); } catch {} },
+  };
+  let password = store.get();
+
+  function lock(msg) {
+    password = '';
+    store.clear();
+    $('#app').hidden = true;
+    $('#unlock').hidden = false;
+    $('#password').focus();
+    if (msg) say(msg, true);
+  }
+
   async function api(path, init) {
-    const res = await fetch(path, { ...init, headers: { 'Content-Type': 'application/json', ...(init && init.headers) } });
+    const headers = { 'Content-Type': 'application/json', ...(init && init.headers) };
+    if (path.startsWith('/admin/api/')) headers.Authorization = 'Bearer ' + password;
+    const res = await fetch(path, { ...init, headers });
+    if (res.status === 401) { lock('Wrong password. Enter it again.'); throw new Error('Wrong password. Enter it again.'); }
     if (res.status === 204) return null;
     const body = await res.json().catch(() => ({}));
     if (!res.ok) throw new Error(body.error || 'Request failed (' + res.status + ').');
@@ -157,16 +189,36 @@ export const ADMIN_PAGE = `<!doctype html>
 
   // Opened from the Android share sheet: prefill the link and let Harish add a note.
   const firstLink = ${firstLink.toString()};
+  let shared = '';
   if (location.pathname === '/admin/share') {
     const q = new URLSearchParams(location.search);
-    const link = firstLink({ url: q.get('url'), text: q.get('text'), title: q.get('title') });
-    if (link) { $('#url').value = link; $('#text').focus(); say('Shared link ready. Add a note if you like, then tap Add post.'); }
+    shared = firstLink({ url: q.get('url'), text: q.get('text'), title: q.get('title') }) || '';
+    if (shared) $('#url').value = shared;
     else say('No https link found in what was shared.', true);
     history.replaceState(null, '', '/admin');
   }
 
-  loadPosts();
-  loadSyncs();
+  function start() {
+    $('#unlock').hidden = true;
+    $('#app').hidden = false;
+    if (shared) { $('#text').focus(); say('Shared link ready. Add a note if you like, then tap Add post.'); }
+    else if (status.className !== 'bad') say('');
+    loadPosts();
+    loadSyncs();
+  }
+
+  $('#unlock').addEventListener('submit', (ev) => {
+    ev.preventDefault();
+    password = $('#password').value;
+    store.set(password);
+    $('#password').value = '';
+    say('');
+    start();
+  });
+  $('#forget').addEventListener('click', () => { lock(); say('Password forgotten on this device.'); });
+
+  if (password) start();
+  else { lock(); if (shared) say('Enter the admin password to add the shared link.'); }
 </script>
 </body>
 </html>

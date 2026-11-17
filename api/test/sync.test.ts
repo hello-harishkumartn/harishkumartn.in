@@ -4,7 +4,7 @@ import { createApp } from '../src/app';
 import worker from '../src/index';
 import { runSync } from '../src/sync';
 import { fakeFetch, youtubeFeed, type FakeVideo } from './fixtures';
-import { accessKeys, admin, call, seed } from './helpers';
+import { admin, call, seed } from './helpers';
 
 const v = (id: string, day: number, title = `Video ${id}`): FakeVideo => ({ id: `vid${id}`.padEnd(11, '0'), title, published: `2026-11-${String(day).padStart(2, '0')}T10:00:00+00:00` });
 const ids = async () =>
@@ -137,10 +137,10 @@ describe('triggers', () => {
   });
 
   it('the admin can run a sync on demand and sees the result', async () => {
-    const handler = createApp({ accessKeys, fetch: fakeFetch(youtubeFeed([v('A', 10)])) });
+    const handler = createApp({ fetch: fakeFetch(youtubeFeed([v('A', 10)])) });
     const res = await admin('/admin/api/sync', { method: 'POST' }, handler);
     expect(res.status).toBe(200);
     expect(await res.json()).toEqual({ youtube: { ok: true, items: 1 } });
-    expect((await call('/admin/api/sync', { method: 'POST' }, handler)).status).toBe(403);
+    expect((await call('/admin/api/sync', { method: 'POST' }, handler)).status).toBe(401);
   });
 });
