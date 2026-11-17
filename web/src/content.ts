@@ -388,7 +388,7 @@ export const social = {
    * deployed; while empty the feed shows the profile links instead of posts.
    * VITE_SOCIAL_API overrides it for local development.
    */
-  api: '',
+  api: 'https://harish-social.harish-social-api.workers.dev',
   /** Posts per side in the home section. */
   homeCount: 3,
   page: {

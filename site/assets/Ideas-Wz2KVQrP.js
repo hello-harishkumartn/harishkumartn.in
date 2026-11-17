@@ -1,1 +1,0 @@
-import{D as e}from"./index-D9cUZet2.js";import{r as t}from"./Section-lWzHrrKI.js";import{t as n}from"./EntryList-CQoqPjkE.js";import{t as r}from"./jsx-runtime-Wy9s6hX0.js";var i=r();function a(){return(0,i.jsx)(t,{id:`ideas`,kicker:e.kicker,title:e.title,intro:e.intro,children:(0,i.jsx)(n,{entries:e.entries})})}export{a as Ideas};
