@@ -15,7 +15,7 @@ describe('GET /feed', () => {
     const body = await res.json<{ posts: Record<string, unknown>[]; next: string | null }>();
     expect(body.posts.map((p) => p.id)).toEqual(['linkedin:activity:1', 'youtube:a']);
     expect(Object.keys(body.posts[1]).sort()).toEqual(
-      ['category', 'embedUrl', 'id', 'kind', 'mediaUrl', 'platform', 'publishedAt', 'source', 'text', 'title', 'url'].sort(),
+      ['caption', 'category', 'embedUrl', 'id', 'kind', 'mediaUrl', 'platform', 'publishedAt', 'source', 'text', 'title', 'url'].sort(),
     );
     expect(body.posts[1]).toMatchObject({ title: 'Old video', mediaUrl: 'https://i.ytimg.com/vi/a/hq.jpg', publishedAt: iso(1) });
     expect(body.next).toBeNull();

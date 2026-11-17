@@ -6,4 +6,6 @@ await applyD1Migrations(env.DB, env.TEST_MIGRATIONS);
 // Storage is shared between tests in this plugin version, so every test starts from empty tables.
 beforeEach(async () => {
   await env.DB.batch(['posts', 'tokens', 'sync_runs'].map((t) => env.DB.prepare(`DELETE FROM ${t}`)));
+  const { keys } = await env.MEDIA.list();
+  await Promise.all(keys.map((k) => env.MEDIA.delete(k.name)));
 });

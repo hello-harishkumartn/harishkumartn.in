@@ -16,6 +16,40 @@
 | LinkedIn | Curated by hand in the admin page. |
 | Admin protection | Cloudflare Access (Google or email one-time code) in front of `/admin/*`. The Worker also verifies the Access JWT. |
 
+## Revision 5: automatic previews and a livelier design (2026-11-17, overrides the rest where they differ)
+
+Cards with only a date and a button look lifeless. When a curated post is added, the Worker reads the post's public data and fills in the caption, a cover image and the real post date. Checked on Harish's three real posts on 2026-11-17 with plain requests (no crawler user agent): all three sources return all three fields.
+
+**Sources (only fixed hosts built from the canonical post id; nothing the visitor or admin types is fetched).**
+- **X:** `cdn.syndication.twimg.com/tweet-result?id=<id>&token=<t>` (the public endpoint X's own embed uses; token is `((id / 1e15) * PI).toString(36)` without zeros and dots). Text is `text` cut to `display_text_range` (code points, `&amp;` style entities decoded), date `created_at`, image the first `mediaDetails[].media_url_https`. If that fails, the official oEmbed `publish.twitter.com/oembed?url=<url>&omit_script=1&dnt=1` gives the text and date, no image.
+- **LinkedIn:** the public post URL. Caption and date from the first JSON-LD object with a `description` or `articleBody` (`datePublished`); image from `og:image` (LinkedIn's link has `e=2147483647`, it never expires). Fallback caption: `<title>` before ` | `.
+- **Instagram:** the public post URL. Caption from `og:title` (the part inside the quotes after `on Instagram: `), date from `og:description` ("on November 16, 2026", midday UTC so it never shifts a day), image `og:image`.
+- Requests send an honest user agent `harish-social/1.0 (+https://harishkumartn.in)` and time out after 10 seconds.
+
+**Images are copied, never hotlinked.** Instagram image links expire in weeks and its CDN refuses other sites. The Worker downloads the image once (hosts allowed: `pbs.twimg.com`, `media.licdn.com`, `dms.licdn.com`, `*.cdninstagram.com`, `*.fbcdn.net`; type `image/jpeg|png|webp`; at most 1.5 MB, else no image) and stores it in a new D1 table `media (post_id PRIMARY KEY, content_type, bytes BLOB, created_at)`. Public route `GET /media/<post id>` serves it with `Cache-Control: public, max-age=86400`; 404 for hidden or unknown posts. `mediaUrl` in the feed becomes the absolute `/media/...` URL on the Worker.
+
+**Schema (migration 0002).** `posts` gains `caption TEXT` (fetched, separate from Harish's note in `text`), `preview_status` (`none`, `pending`, `ok`, `failed`), `preview_attempts INTEGER` and `date_from_user INTEGER`. Curated rows already in the table become `pending`, so the cron backfills the three live posts.
+
+**When previews run.**
+- On add: the post is saved and returned at once; the preview runs in `ctx.waitUntil`.
+- Cron: after the YouTube sync, up to 5 curated posts that are `pending` or `failed` with fewer than 3 attempts.
+- Admin: `POST /admin/api/posts/:id/preview` runs it now and returns the post. The admin list shows the status and a "Refresh preview" button.
+- A success sets caption, image and `published_at` (only when Harish did not give a date). A failure records `failed` and changes nothing else. Delete removes the media row in the same batch.
+
+**Changes after the fresh-context review (override the paragraphs above).**
+- **Images live in Workers KV, not D1.** D1 returns BLOBs as arrays of numbers, too much CPU for the free plan's 10 ms. KV binding `MEDIA`, key `<post id>`, metadata `{ contentType }`, served as a stream. No `media` table. A preview that finishes after its post was deleted removes its own key.
+- **Parsing uses HTMLRewriter** (streaming, native) to pull only `<title>`, the `og:` metas and JSON-LD text; the parsers take a `Response`. The cron previews at most 2 posts per run.
+- **One 25 second deadline** covers the whole preview (page, fallback and image), within `waitUntil`'s 30 seconds. `preview_attempts` is incremented before fetching, so a killed run still counts. `createApp` passes `ctx` through.
+- **Image fetch hardening.** `redirect: 'manual'` (a redirect means no image), https only, host matched by exact name or a dot suffix, the body read with a running byte count (1.5 MB cap) and the type taken from the magic bytes (JPEG, PNG, WebP), never from the upstream header. Page fetches check that the final URL is still on the platform's host.
+- **`/media/<id>`** is routed by prefix (ids contain `:` and are URL-encoded), sends `X-Content-Type-Options: nosniff` and `Content-Security-Policy: default-src 'none'; sandbox`, and `mediaUrl` carries `?v=<updated_at>` so a refresh is not stuck behind the one-day cache.
+- **Migration dates.** `date_from_user` is set to 1 on existing rows whose `published_at` differs from `created_at` by more than a minute, so a typed date is never replaced. Only curated rows become `pending`; YouTube stays `none`.
+- **Known and left as is:** the feed's 5 minute browser cache can show a card without its preview for up to 5 minutes after an add. YouTube thumbnails still load from `i.ytimg.com` before a click (unchanged since phase 4; can move to KV later).
+
+**Frontend.**
+- `FeedPost` gains `caption`. A card with an image leads with it (Instagram 4:5, others 16:9) with a play badge on videos; tapping it loads the embed in place (click-to-load stays). X images link to the post. Below: a relative date ("2 days ago", the full date after 30 days), Harish's note in the accent colour when there is one, then the caption clamped to 4 lines.
+- Each platform has a brand tint: a soft glow behind the panel heading, the icon in a tinted tile and a tinted border and lift on card hover. Cards fade up in sequence (only when the visitor allows motion).
+- The empty YouTube panel becomes an invitation: the icon, "No videos yet" and a "Subscribe" link.
+
 ## Revision 4: one grid per platform, no Professional and Personal split (2026-11-17, overrides the frontend below)
 
 Harish wants every platform visible at once instead of two tabs.
@@ -277,3 +311,10 @@ The Workers free tier (100,000 requests a day), D1 free (5 GB) and Cron Triggers
 - **As specified.** `feed.ts` has `PLATFORM_ORDER` and `groupByPlatform`; the tab helpers are gone. `src/social/PlatformPanel.tsx` renders one platform for both the page (four parallel `?platform=<p>&limit=6` calls, a "More from <platform>" button per panel) and home (one `?limit=50` call, 2 posts each). No tabs, filters or URL state remain.
 - **Small changes.** The page no longer shows the row of profile chips at the top, since every panel has its own "Profile" link (the chips still show when the home feed is down). Post cards no longer repeat the platform name and icon, because the panel heading already says it; the card header is just the date.
 - **Tested.** 57 web tests. Headless Chrome on desktop (1366) and phone (390) against the live API: four panels in a 2 by 2 grid on desktop and one column on the phone, the right cards in each, YouTube empty, no tabs, no horizontal overflow, no failed requests or errors, and "Show post" loads the Instagram embed only on click.
+
+## Drift report: revision 5, previews and design (2026-11-17, revision 5 with review changes vs code)
+
+- **As specified.** `api/src/previews.ts` holds the X (syndication then oEmbed), LinkedIn (JSON-LD, og:image, title) and Instagram (og:title, og:description, og:image) parsers on HTMLRewriter, the hardened image download, `refreshPreview`, `retryPreviews` (2 per cron run) and `serveMedia`. Images live in KV namespace `MEDIA`. Migration `0002_previews.sql` adds the four columns and the backfill rules. The admin list shows the preview status, the caption, the stored cover and a "Refresh preview" button.
+- **Changed while building.** X's `display_text_range` end counts escaped entities, so only its start is used; trailing `t.co` links are trimmed instead. The admin page only shows covers served by the Worker (its CSP is `img-src 'self'`). Inside a card the caption's paragraph breaks become spaces, so the 4-line clamp shows 4 lines of words. Harish's note shows above the caption with an accent bar. `relativeDate` lives in `feed.ts` with tests.
+- **Known.** Instagram's reel covers carry Instagram's own faint play circle under the card's play badge.
+- **Tested.** 83 Worker tests (parsers on trimmed real responses, add then preview, user dates kept, oEmbed fallback, blocked page, oversized, fake-type and redirected images, media headers and 404s, delete, admin refresh, cron order, retry limits, the migration's backfill rules) and 58 web tests. End to end against `wrangler dev` with the three real posts: all three previews `ok` with caption, stored image (Instagram cover 30 KB) and the real date. Headless Chrome on desktop and phone: no failed requests, no errors, no overflow, embeds still load only on click.

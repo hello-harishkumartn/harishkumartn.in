@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { FeedError, fetchFeed, groupByPlatform, PLATFORM_ORDER } from '../src/social/feed.ts';
+import { FeedError, fetchFeed, groupByPlatform, PLATFORM_ORDER, relativeDate } from '../src/social/feed.ts';
 
 const API = 'https://harish-social.example.workers.dev';
 const post = (id, category, platform, publishedAt = '2026-11-10T00:00:00.000Z') => ({
@@ -62,4 +62,17 @@ test('groupByPlatform takes the newest few of every platform from one mixed feed
   assert.deepEqual(Object.fromEntries(Object.entries(groups).map(([k, v]) => [k, v.map((p) => p.id)])), {
     linkedin: ['l1', 'l2'], x: [], instagram: ['i1', 'i2'], youtube: ['y1'],
   });
+});
+
+test('relativeDate: just now, minutes, hours, days, then the full date after 30 days', () => {
+  const now = Date.parse('2026-11-17T12:00:00.000Z');
+  const ago = (ms) => new Date(now - ms).toISOString();
+  assert.equal(relativeDate(ago(20_000), now), 'Just now');
+  assert.equal(relativeDate(ago(5 * 60_000), now), '5 minutes ago');
+  assert.equal(relativeDate(ago(60 * 60_000), now), '1 hour ago');
+  assert.equal(relativeDate(ago(26 * 3600_000), now), 'Yesterday');
+  assert.equal(relativeDate(ago(3 * 86400_000), now), '3 days ago');
+  assert.equal(relativeDate(ago(29 * 86400_000), now), '29 days ago');
+  assert.equal(relativeDate('2026-09-02T08:00:00.000Z', now), '2 Sept 2026');
+  assert.equal(relativeDate(ago(-60_000), now), 'Just now');
 });

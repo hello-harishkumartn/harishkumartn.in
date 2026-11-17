@@ -14,7 +14,10 @@ export interface FeedPost {
   url: string;
   kind: 'video' | 'image' | 'carousel' | 'text';
   title: string | null;
+  /** Harish's own note. */
   text: string | null;
+  /** The post's own words, read from the platform when it was shared. */
+  caption: string | null;
   mediaUrl: string | null;
   /** Click-to-load preview iframe, or null (X). */
   embedUrl: string | null;
@@ -82,4 +85,21 @@ export function groupByPlatform(posts: FeedPost[], n: number): Record<Platform, 
     if (group && group.length < n) group.push(post);
   }
   return groups;
+}
+
+const fullDate = new Intl.DateTimeFormat('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
+
+/** "Just now", "5 minutes ago", "Yesterday", "3 days ago", then the full date once a post is 30 days old. */
+export function relativeDate(iso: string, now = Date.now()): string {
+  const diff = Math.max(0, now - Date.parse(iso));
+  const minutes = Math.floor(diff / 60_000);
+  const hours = Math.floor(diff / 3_600_000);
+  const days = Math.floor(diff / 86_400_000);
+  const plural = (n: number, unit: string) => `${n} ${unit}${n === 1 ? '' : 's'} ago`;
+  if (minutes < 1) return 'Just now';
+  if (hours < 1) return plural(minutes, 'minute');
+  if (days < 1) return plural(hours, 'hour');
+  if (days === 1) return 'Yesterday';
+  if (days < 30) return plural(days, 'day');
+  return fullDate.format(new Date(iso));
 }

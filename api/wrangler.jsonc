@@ -18,6 +18,8 @@
       "migrations_dir": "migrations"
     }
   ],
+  // Preview images copied from the platforms (docs/egm revision 5). Created 2026-11-17 with `npx wrangler kv namespace create MEDIA`.
+  "kv_namespaces": [{ "binding": "MEDIA", "id": "02c707a857e04c10a1dd70862228846e" }],
   // Checked before the admin password: 30 admin API calls a minute per client address.
   "ratelimits": [
     { "name": "ADMIN_LIMITER", "namespace_id": "1001", "simple": { "limit": 30, "period": 60 } }

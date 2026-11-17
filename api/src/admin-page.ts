@@ -38,6 +38,9 @@ export const ADMIN_PAGE = `<!doctype html>
   a { color: var(--accent); overflow-wrap: anywhere; }
   #status:empty { display: none; }
   [hidden] { display: none !important; }
+  .thumb { width: 100%; max-width: 14rem; aspect-ratio: 16 / 9; object-fit: cover; border-radius: .6rem; border: 1px solid var(--line); }
+  .caption { display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+  .tag.bad { color: var(--bad); border-color: var(--bad); }
   .forget { margin-top: 3rem; font-size: .85rem; color: var(--muted); }
 </style>
 </head>
@@ -129,6 +132,7 @@ export const ADMIN_PAGE = `<!doctype html>
       el('button', { type: 'button', on: { click: () => change(p.id, { hidden: !p.hidden }) } }, p.hidden ? 'Show' : 'Hide'));
     if (p.source === 'curated') {
       actions.append(
+        el('button', { type: 'button', on: { click: (ev) => refresh(p, ev.target) } }, 'Refresh preview'),
         el('button', { type: 'button', on: { click: () => edit(p) } }, 'Edit note'),
         el('button', { type: 'button', on: { click: () => remove(p) } }, 'Delete'));
     }
@@ -136,9 +140,12 @@ export const ADMIN_PAGE = `<!doctype html>
       el('div', { class: 'row' },
         el('span', { class: 'tag' }, p.platform), el('span', { class: 'tag' }, p.source),
         p.hidden ? el('span', { class: 'tag' }, 'hidden') : '',
+        p.source === 'curated' ? el('span', { class: 'tag' + (p.previewStatus === 'failed' ? ' bad' : '') }, PREVIEW_LABEL[p.previewStatus] || p.previewStatus) : '',
         el('span', { class: 'muted' }, new Date(p.publishedAt).toLocaleString())),
+      p.mediaUrl && p.mediaUrl.startsWith(location.origin + '/') ? el('img', { src: p.mediaUrl, alt: '', loading: 'lazy', class: 'thumb' }) : '',
       p.title ? el('strong', {}, p.title) : '',
-      p.text ? el('div', { class: 'text' }, p.text) : '',
+      p.text ? el('div', { class: 'text' }, 'Note: ' + p.text) : '',
+      p.caption ? el('div', { class: 'text muted caption' }, p.caption) : '',
       el('a', { href: p.url, target: '_blank', rel: 'noreferrer' }, p.url),
       actions);
   }
@@ -146,6 +153,17 @@ export const ADMIN_PAGE = `<!doctype html>
   async function change(id, patch) {
     try { await api('/admin/api/posts/' + encodeURIComponent(id), { method: 'PATCH', body: JSON.stringify(patch) }); say('Saved.'); loadPosts(); }
     catch (e) { say(e.message, true); }
+  }
+  const PREVIEW_LABEL = { none: 'no preview', pending: 'preview pending', ok: 'preview ready', failed: 'preview failed' };
+  async function refresh(p, button) {
+    button.disabled = true;
+    say('Fetching the preview...');
+    try {
+      const post = await api('/admin/api/posts/' + encodeURIComponent(p.id) + '/preview', { method: 'POST' });
+      say(post.previewStatus === 'ok' ? 'Preview updated.' : 'Could not read that post right now. Try again later.', post.previewStatus !== 'ok');
+      loadPosts();
+    } catch (e) { say(e.message, true); }
+    button.disabled = false;
   }
   function edit(p) { const text = prompt('Note (leave empty for none)', p.text || ''); if (text !== null) change(p.id, { text }); }
   async function remove(p) {
@@ -159,7 +177,7 @@ export const ADMIN_PAGE = `<!doctype html>
     const f = ev.target;
     const body = { url: f.url.value, text: f.text.value };
     if (f.date.value) body.published_at = new Date(f.date.value).toISOString();
-    try { await api('/admin/api/posts', { method: 'POST', body: JSON.stringify(body) }); f.reset(); say('Added.'); loadPosts(); }
+    try { await api('/admin/api/posts', { method: 'POST', body: JSON.stringify(body) }); f.reset(); say('Added. The preview fills in within a few seconds.'); setTimeout(loadPosts, 6000); loadPosts(); }
     catch (e) { say(e.message, true); }
   });
 

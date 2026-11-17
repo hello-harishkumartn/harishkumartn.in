@@ -2,10 +2,11 @@ import { requirePassword, requireSameOrigin } from './auth';
 import { ADMIN_PAGE } from './admin-page';
 import { allowedOrigin, errorResponse, HttpError, json, readJson, withCors } from './http';
 import {
-  adminPost, deletePost, encodeCursor, insertCurated, latestSyncs, listAll, listFeed, PLATFORM_CATEGORY,
-  publicPost, updatePost, type Category, type FeedQuery, type Platform,
+  adminPost, deletePost, encodeCursor, getPost, insertCurated, latestSyncs, listAll, listFeed, PLATFORM_CATEGORY,
+  publicPost, updatePost, type Category, type FeedQuery, type Platform, type PostRow,
 } from './posts';
 import { ICON_SVG, MANIFEST } from './share';
+import { refreshPreview, serveMedia } from './previews';
 import { runSync } from './sync';
 import { isYouTubeUrl, parseCuratedUrl } from './urls';
 
@@ -20,11 +21,15 @@ const FUTURE_SKEW_MS = 10 * 60 * 1000;
 
 export function createApp(deps: AppDeps): ExportedHandler<Env> {
   return {
-    async fetch(request, env) {
+    async fetch(request, env, ctx) {
       const url = new URL(request.url);
       const origin = allowedOrigin(request, env);
       try {
-        if (url.pathname === '/admin' || url.pathname.startsWith('/admin/')) return await handleAdmin(request, env, url, deps);
+        if (url.pathname === '/admin' || url.pathname.startsWith('/admin/')) return await handleAdmin(request, env, url, deps, ctx);
+        if (url.pathname.startsWith('/media/')) {
+          if (request.method !== 'GET' && request.method !== 'HEAD') throw new HttpError(405, 'Only GET is allowed.');
+          return await serveMedia(env, url.pathname.slice('/media/'.length));
+        }
         if (!PUBLIC_ROUTES.has(url.pathname)) throw new HttpError(404, 'Not found.');
         if (request.method === 'OPTIONS') return withCors(preflight(), origin);
         if (request.method !== 'GET') throw new HttpError(405, 'Only GET is allowed.');
@@ -73,7 +78,7 @@ async function handleFeed(env: Env, url: URL): Promise<Response> {
 
   const rows = await listFeed(env.DB, { category, platform, limit, before });
   const next = rows.length === limit ? encodeCursor(rows[rows.length - 1]) : null;
-  return json({ posts: rows.map(publicPost), next }, 200, { 'Cache-Control': 'public, max-age=300' });
+  return json({ posts: rows.map((r) => publicPost(r, url.origin)), next }, 200, { 'Cache-Control': 'public, max-age=300' });
 }
 
 async function handlePublic(env: Env, url: URL): Promise<Response> {
@@ -95,12 +100,12 @@ async function handleHealth(env: Env): Promise<Response> {
   return json({ ok: true, lastSync: await latestSyncs(env.DB) }, 200, { 'Cache-Control': 'public, max-age=60' });
 }
 
-async function handleAdmin(request: Request, env: Env, url: URL, deps: AppDeps): Promise<Response> {
+async function handleAdmin(request: Request, env: Env, url: URL, deps: AppDeps, ctx: ExecutionContext): Promise<Response> {
   try {
     // The page shell (/admin, /admin/share) holds no data, so it opens without a password. Every API call needs one.
     if (url.pathname.startsWith('/admin/api/')) await requirePassword(request, env);
     if (request.method !== 'GET') requireSameOrigin(request);
-    const res = await routeAdmin(request, env, url, deps);
+    const res = await routeAdmin(request, env, url, deps, ctx);
     res.headers.set('Cache-Control', 'no-store');
     return res;
   } catch (err) {
@@ -111,11 +116,13 @@ async function handleAdmin(request: Request, env: Env, url: URL, deps: AppDeps):
   }
 }
 
-async function routeAdmin(request: Request, env: Env, url: URL, deps: AppDeps): Promise<Response> {
+async function routeAdmin(request: Request, env: Env, url: URL, deps: AppDeps, ctx: ExecutionContext): Promise<Response> {
   const { method } = request;
+  const fetcher: typeof fetch = deps.fetch ?? ((input, init) => fetch(input, init));
+  const out = (r: PostRow) => adminPost(r, url.origin);
   if (url.pathname === '/admin/api/sync') {
     if (method !== 'POST') throw new HttpError(405, 'Use POST.');
-    return json(await runSync(env, { fetch: deps.fetch ?? ((input, init) => fetch(input, init)) }));
+    return json(await runSync(env, { fetch: fetcher }));
   }
   if (url.pathname === '/admin' || url.pathname === '/admin/share') {
     if (method !== 'GET') throw new HttpError(405, 'Only GET is allowed.');
@@ -129,9 +136,22 @@ async function routeAdmin(request: Request, env: Env, url: URL, deps: AppDeps): 
   }
 
   if (url.pathname === '/admin/api/posts') {
-    if (method === 'GET') return json({ posts: (await listAll(env.DB)).map(adminPost) });
-    if (method === 'POST') return createCurated(request, env);
+    if (method === 'GET') return json({ posts: (await listAll(env.DB)).map(out) });
+    if (method === 'POST') {
+      const post = await createCurated(request, env);
+      // Answer at once; the preview fills in while the share sheet closes.
+      ctx.waitUntil(refreshPreview(env, fetcher, post.id).catch((err) => console.warn('Preview failed', post.id, err)));
+      return json(out(post), 201);
+    }
     throw new HttpError(405, 'Use GET or POST.');
+  }
+
+  const preview = /^\/admin\/api\/posts\/([^/]+)\/preview$/.exec(url.pathname);
+  if (preview) {
+    if (method !== 'POST') throw new HttpError(405, 'Use POST.');
+    const id = decodeURIComponent(preview[1]);
+    await refreshPreview(env, fetcher, id);
+    return json(out((await getPost(env.DB, id))!));
   }
 
   const match = /^\/admin\/api\/posts\/([^/]+)$/.exec(url.pathname);
@@ -146,10 +166,11 @@ async function routeAdmin(request: Request, env: Env, url: URL, deps: AppDeps): 
       }
       if (body.text !== undefined) patch.text = optionalText(body.text);
       if (patch.hidden === undefined && patch.text === undefined) throw new HttpError(400, 'Nothing to change.');
-      return json(adminPost(await updatePost(env.DB, id, patch)));
+      return json(out(await updatePost(env.DB, id, patch)));
     }
     if (method === 'DELETE') {
       await deletePost(env.DB, id);
+      await env.MEDIA.delete(id);
       return new Response(null, { status: 204 });
     }
     throw new HttpError(405, 'Use PATCH or DELETE.');
@@ -168,7 +189,7 @@ function optionalText(value: unknown): string | null {
   return text;
 }
 
-async function createCurated(request: Request, env: Env): Promise<Response> {
+async function createCurated(request: Request, env: Env): Promise<PostRow> {
   const body = await readJson(request);
   if (typeof body.url === 'string' && isYouTubeUrl(body.url)) {
     throw new HttpError(400, 'YouTube videos are added automatically. Use Sync now if one is missing.');
@@ -178,12 +199,14 @@ async function createCurated(request: Request, env: Env): Promise<Response> {
   const text = optionalText(body.text);
 
   let publishedAt = new Date().toISOString();
+  let dateFromUser = false;
   if (body.published_at !== undefined && body.published_at !== null && body.published_at !== '') {
     const ms = typeof body.published_at === 'string' ? Date.parse(body.published_at) : Number.NaN;
     if (Number.isNaN(ms)) throw new HttpError(400, 'published_at must be a date.');
     if (ms > Date.now() + FUTURE_SKEW_MS) throw new HttpError(400, 'published_at cannot be in the future.');
     publishedAt = new Date(ms).toISOString();
+    dateFromUser = true;
   }
 
-  return json(adminPost(await insertCurated(env.DB, link, text, publishedAt)), 201);
+  return insertCurated(env.DB, link, text, publishedAt, dateFromUser);
 }

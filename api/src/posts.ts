@@ -23,10 +23,15 @@ export interface PostRow {
   media_url: string | null;
   published_at: string;
   hidden: number;
+  caption: string | null;
+  preview_status: 'none' | 'pending' | 'ok' | 'failed';
 }
 
-/** The shape the public feed returns. Internal columns (hidden, missing_runs, timestamps) stay private. */
-export const publicPost = (r: PostRow) => ({
+/**
+ * The shape the public feed returns. Internal columns (hidden, missing_runs, timestamps) stay private.
+ * Images copied into KV are stored as a path on this Worker; `origin` makes them absolute.
+ */
+export const publicPost = (r: PostRow, origin = '') => ({
   id: r.id,
   platform: r.platform,
   category: r.category,
@@ -35,14 +40,15 @@ export const publicPost = (r: PostRow) => ({
   kind: r.kind,
   title: r.title,
   text: r.text,
-  mediaUrl: r.media_url,
+  caption: r.caption,
+  mediaUrl: r.media_url?.startsWith('/') ? `${origin}${r.media_url}` : r.media_url,
   embedUrl: embedUrlFor(r.platform, r.url),
   publishedAt: r.published_at,
 });
 
-export const adminPost = (r: PostRow) => ({ ...publicPost(r), hidden: r.hidden === 1 });
+export const adminPost = (r: PostRow, origin = '') => ({ ...publicPost(r, origin), hidden: r.hidden === 1, previewStatus: r.preview_status });
 
-const COLUMNS = 'id, platform, category, source, url, kind, title, text, media_url, published_at, hidden';
+const COLUMNS = 'id, platform, category, source, url, kind, title, text, media_url, published_at, hidden, caption, preview_status';
 
 export interface FeedQuery {
   category?: Category;
@@ -74,15 +80,15 @@ export async function getPost(db: D1Database, id: string): Promise<PostRow | nul
   return db.prepare(`SELECT ${COLUMNS} FROM posts WHERE id = ?`).bind(id).first<PostRow>();
 }
 
-export async function insertCurated(db: D1Database, link: CuratedUrl, text: string | null, publishedAt: string): Promise<PostRow> {
+export async function insertCurated(db: D1Database, link: CuratedUrl, text: string | null, publishedAt: string, dateFromUser: boolean): Promise<PostRow> {
   const id = `${link.platform}:${link.nativeId}`;
   const now = new Date().toISOString();
   const res = await db
     .prepare(
-      `INSERT INTO posts (id, platform, category, source, url, kind, text, published_at, created_at, updated_at)
-       VALUES (?, ?, ?, 'curated', ?, ?, ?, ?, ?, ?) ON CONFLICT (id) DO NOTHING`,
+      `INSERT INTO posts (id, platform, category, source, url, kind, text, published_at, created_at, updated_at, preview_status, date_from_user)
+       VALUES (?, ?, ?, 'curated', ?, ?, ?, ?, ?, ?, 'pending', ?) ON CONFLICT (id) DO NOTHING`,
     )
-    .bind(id, link.platform, PLATFORM_CATEGORY[link.platform], link.url, link.kind, text, publishedAt, now, now)
+    .bind(id, link.platform, PLATFORM_CATEGORY[link.platform], link.url, link.kind, text, publishedAt, now, now, dateFromUser ? 1 : 0)
     .run();
   if (res.meta.changes === 0) throw new HttpError(409, 'That post is already in the feed.');
   return (await getPost(db, id))!;
