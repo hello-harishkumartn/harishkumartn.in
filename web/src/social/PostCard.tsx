@@ -1,6 +1,5 @@
 import { ArrowUpRight, Play } from 'lucide-react';
 import { useState } from 'react';
-import { BrandIcon } from './BrandIcon';
 import { PLATFORM_NAMES, type FeedPost } from './feed';
 
 const date = new Intl.DateTimeFormat('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
@@ -64,12 +63,8 @@ export function PostCard({ post }: { post: FeedPost }) {
 
   return (
     <article className="flex min-w-0 flex-col gap-4 rounded-3xl border border-white/[0.08] bg-card p-5 md:p-6">
-      <header className="flex items-center justify-between gap-3">
-        <span className="flex items-center gap-2 font-mono text-[11px] uppercase tracking-[0.2em] text-muted-foreground">
-          <BrandIcon name={post.platform} className="size-4 text-primary" />
-          {name}
-        </span>
-        <time dateTime={post.publishedAt} className="font-mono text-[11px] text-muted-foreground">
+      <header>
+        <time dateTime={post.publishedAt} className="font-mono text-[11px] uppercase tracking-[0.2em] text-muted-foreground">
           {date.format(new Date(post.publishedAt))}
         </time>
       </header>

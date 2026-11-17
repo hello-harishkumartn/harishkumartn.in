@@ -72,7 +72,7 @@ If both are set, `youtubeId` wins.
 
 - **YouTube** syncs on its own every 30 minutes.
 - **LinkedIn, X and Instagram:** share the post to the admin page (`<worker>/admin`, unlocked with the `ADMIN_PASSWORD` secret, which the page remembers per device). On Android, install the admin page once and it appears in the Share menu; anywhere else, paste the link there. A note is optional.
-- The home "Highlights" section shows the latest 3 posts per side and links to the full `/social/` page (`social/index.html`, a second Vite entry that never loads the 3D scene).
+- The home "Highlights" section shows the latest 2 posts of each platform (LinkedIn, X, Instagram, YouTube in a 2 by 2 grid) and links to the full `/social/` page, which has one panel per platform with its own "More from" button (`social/index.html`, a second Vite entry that never loads the 3D scene).
 - `social.api` in `content.ts` is the Worker URL. While it is empty, both places show the profile links instead of posts. For local work run the Worker (`cd ../api && npx wrangler dev`) and start this site with `VITE_SOCIAL_API=http://localhost:8787 npm run dev`.
 
 ---

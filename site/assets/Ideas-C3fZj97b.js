@@ -1,0 +1,1 @@
+import{m as e,s as t}from"./styles-DWaj6lfI.js";import{r as n}from"./Section-DqaIjUc4.js";import{t as r}from"./EntryList-xhecr_d7.js";var i=e();function a(){return(0,i.jsx)(n,{id:`ideas`,kicker:t.kicker,title:t.title,intro:t.intro,children:(0,i.jsx)(r,{entries:t.entries})})}export{a as Ideas};

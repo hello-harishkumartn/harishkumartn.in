@@ -16,6 +16,14 @@
 | LinkedIn | Curated by hand in the admin page. |
 | Admin protection | Cloudflare Access (Google or email one-time code) in front of `/admin/*`. The Worker also verifies the Access JWT. |
 
+## Revision 4: one grid per platform, no Professional and Personal split (2026-11-17, overrides the frontend below)
+
+Harish wants every platform visible at once instead of two tabs.
+
+- **`/social/` page.** No tabs, no platform filter and no `?tab=&platform=` URL state. Four platform panels in a fixed order (LinkedIn, X, Instagram, YouTube), one column on phones and a 2 by 2 grid from `md` up (Instagram embeds need about 326px, so four across is too narrow). Each panel has the platform icon and name, a "Profile" link, its posts stacked newest first and its own "Load more". Each panel fetches `GET /feed?platform=<p>&limit=6`, the four in parallel. A panel that fails shows a short error with the profile link; the others are unaffected. An empty panel says "Nothing here yet." with the profile link.
+- **Home Highlights.** The same four panels with the newest 2 posts each (`social.homeCount` becomes 2), from one call `GET /feed?limit=50` grouped by platform. A platform whose newest post is older than the 50 newest overall shows empty on home only; the full page still has it.
+- **Code.** `feed.ts` drops `Tab` helpers (`splitHome`, `PLATFORMS_BY_TAB`, `parseState`, `toSearch`) and gains `PLATFORM_ORDER` and `groupByPlatform(posts, n)`. A shared `PlatformPanel` component renders a panel for both places. The API and its `category` field do not change.
+
 ## Revision 3: a password instead of Cloudflare Access (2026-11-17, overrides everything below)
 
 Setting up Zero Trust was too much work for a one-person admin, so Cloudflare Access is dropped. Every mention of Access, the JWT, `ACCESS_TEAM_DOMAIN`, `ACCESS_AUD` and `ADMIN_EMAIL` below is replaced by this.
@@ -263,3 +271,9 @@ The Workers free tier (100,000 requests a day), D1 free (5 GB) and Cron Triggers
 - **As specified.** `src/auth.ts` holds `requirePassword` (fail closed under 24 characters, rate limit, SHA-256 plus `timingSafeEqual`) and `requireSameOrigin`. `/admin/api/*` needs the bearer password; `/admin` and `/admin/share` serve the data-free page. `src/access.ts`, `jose` and the Access vars are gone; `ADMIN_PASSWORD` replaces `ADMIN_EMAIL` in `secrets.d.ts`.
 - **Small additions.** Admin error responses (401, 403, 429) also carry `no-store`. When a share arrives while the page is locked the link is kept and the page asks for the password first. The tests give every call its own `CF-Connecting-IP` so the rate limit never spills between tests.
 - **Tested.** 60 Worker tests, including the 401 cases (missing, wrong, prefix, longer, no scheme, Basic, empty), fail closed with a missing or short secret, and a 429 after 30 calls a minute from one address. A headless Chrome run against `wrangler dev` covered: locked first visit, wrong password, unlock, add a post, reload stays unlocked, share while unlocked, forget, share while locked then unlock. Every `/admin/api` request carried the header and the page threw no errors.
+
+## Drift report: revision 4, platform grids (2026-11-17, revision 4 vs code in `web/`)
+
+- **As specified.** `feed.ts` has `PLATFORM_ORDER` and `groupByPlatform`; the tab helpers are gone. `src/social/PlatformPanel.tsx` renders one platform for both the page (four parallel `?platform=<p>&limit=6` calls, a "More from <platform>" button per panel) and home (one `?limit=50` call, 2 posts each). No tabs, filters or URL state remain.
+- **Small changes.** The page no longer shows the row of profile chips at the top, since every panel has its own "Profile" link (the chips still show when the home feed is down). Post cards no longer repeat the platform name and icon, because the panel heading already says it; the card header is just the date.
+- **Tested.** 57 web tests. Headless Chrome on desktop (1366) and phone (390) against the live API: four panels in a 2 by 2 grid on desktop and one column on the phone, the right cards in each, YouTube empty, no tabs, no horizontal overflow, no failed requests or errors, and "Show post" loads the Instagram embed only on click.

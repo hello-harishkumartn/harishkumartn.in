@@ -33,10 +33,8 @@ export interface FeedParams {
   before?: string;
 }
 
-export const PLATFORMS_BY_TAB: Record<Tab, Platform[]> = {
-  professional: ['linkedin', 'x'],
-  personal: ['instagram', 'youtube'],
-};
+/** The order platform panels appear in, on the page and on home. */
+export const PLATFORM_ORDER: Platform[] = ['linkedin', 'x', 'instagram', 'youtube'];
 
 export const PLATFORM_NAMES: Record<Platform, string> = { linkedin: 'LinkedIn', x: 'X', instagram: 'Instagram', youtube: 'YouTube' };
 
@@ -76,34 +74,12 @@ export async function fetchFeed(
   }
 }
 
-/** Newest `n` posts of each side, from one mixed feed (the home section makes a single call). */
-export function splitHome(posts: FeedPost[], n: number): Record<Tab, FeedPost[]> {
-  return {
-    professional: posts.filter((p) => p.category === 'professional').slice(0, n),
-    personal: posts.filter((p) => p.category === 'personal').slice(0, n),
-  };
-}
-
-export interface PageState {
-  tab: Tab;
-  platform: Platform | null;
-}
-
-/** Reads ?tab=&platform= from the /social/ page URL. Unknown values fall back to the defaults. */
-export function parseState(search: string): PageState {
-  const q = new URLSearchParams(search);
-  const tab: Tab = q.get('tab') === 'personal' ? 'personal' : 'professional';
-  const raw = q.get('platform');
-  const platform = PLATFORMS_BY_TAB[tab].find((p) => p === raw) ?? null;
-  return { tab, platform };
-}
-
-/** The shortest query string for a state; the default state is an empty string. */
-export function toSearch(state: PageState): string {
-  const q = new URLSearchParams();
-  if (state.tab !== 'professional') q.set('tab', state.tab);
-  else if (state.platform) q.set('tab', state.tab);
-  if (state.platform) q.set('platform', state.platform);
-  const s = q.toString();
-  return s ? `?${s}` : '';
+/** Newest `n` posts of every platform, from one mixed feed (the home section makes a single call). */
+export function groupByPlatform(posts: FeedPost[], n: number): Record<Platform, FeedPost[]> {
+  const groups = Object.fromEntries(PLATFORM_ORDER.map((p) => [p, [] as FeedPost[]])) as Record<Platform, FeedPost[]>;
+  for (const post of posts) {
+    const group = groups[post.platform];
+    if (group && group.length < n) group.push(post);
+  }
+  return groups;
 }

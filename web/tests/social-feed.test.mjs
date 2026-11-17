@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { FeedError, fetchFeed, PLATFORMS_BY_TAB, parseState, splitHome, toSearch } from '../src/social/feed.ts';
+import { FeedError, fetchFeed, groupByPlatform, PLATFORM_ORDER } from '../src/social/feed.ts';
 
 const API = 'https://harish-social.example.workers.dev';
 const post = (id, category, platform, publishedAt = '2026-11-10T00:00:00.000Z') => ({
@@ -48,29 +48,18 @@ test('fetchFeed fails with FeedError when the API is not configured, errors, tim
   assert.ok(Date.now() - started < 1000);
 });
 
-test('splitHome takes the newest few of each side from one mixed feed', () => {
+test('platforms show in a fixed order: LinkedIn, X, Instagram, YouTube', () => {
+  assert.deepEqual(PLATFORM_ORDER, ['linkedin', 'x', 'instagram', 'youtube']);
+});
+
+test('groupByPlatform takes the newest few of every platform from one mixed feed, keeping feed order', () => {
   const posts = [
-    post('p1', 'personal', 'youtube'), post('w1', 'professional', 'linkedin'), post('p2', 'personal', 'instagram'),
-    post('p3', 'personal', 'instagram'), post('p4', 'personal', 'youtube'), post('w2', 'professional', 'x'),
+    post('y1', 'personal', 'youtube'), post('l1', 'professional', 'linkedin'), post('i1', 'personal', 'instagram'),
+    post('i2', 'personal', 'instagram'), post('l2', 'professional', 'linkedin'), post('i3', 'personal', 'instagram'),
   ];
-  const { professional, personal } = splitHome(posts, 3);
-  assert.deepEqual(professional.map((p) => p.id), ['w1', 'w2']);
-  assert.deepEqual(personal.map((p) => p.id), ['p1', 'p2', 'p3']);
-});
-
-test('tabs know their platforms', () => {
-  assert.deepEqual(PLATFORMS_BY_TAB, { professional: ['linkedin', 'x'], personal: ['instagram', 'youtube'] });
-});
-
-test('page state round-trips through the URL and ignores nonsense', () => {
-  assert.deepEqual(parseState(''), { tab: 'professional', platform: null });
-  assert.deepEqual(parseState('?tab=personal&platform=youtube'), { tab: 'personal', platform: 'youtube' });
-  assert.deepEqual(parseState('?tab=games&platform=tiktok'), { tab: 'professional', platform: null });
-  assert.deepEqual(parseState('?tab=personal&platform=x'), { tab: 'personal', platform: null });
-  assert.equal(toSearch({ tab: 'professional', platform: null }), '');
-  assert.equal(toSearch({ tab: 'personal', platform: null }), '?tab=personal');
-  assert.equal(toSearch({ tab: 'personal', platform: 'instagram' }), '?tab=personal&platform=instagram');
-  for (const s of ['?tab=personal', '?tab=personal&platform=instagram', '?tab=professional&platform=x']) {
-    assert.deepEqual(parseState(toSearch(parseState(s))), parseState(s));
-  }
+  const groups = groupByPlatform(posts, 2);
+  assert.deepEqual(Object.keys(groups), PLATFORM_ORDER);
+  assert.deepEqual(Object.fromEntries(Object.entries(groups).map(([k, v]) => [k, v.map((p) => p.id)])), {
+    linkedin: ['l1', 'l2'], x: [], instagram: ['i1', 'i2'], youtube: ['y1'],
+  });
 });

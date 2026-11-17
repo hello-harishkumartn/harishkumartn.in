@@ -382,18 +382,18 @@ export const travel = {
 export const social = {
   kicker: 'Highlights',
   title: "What I'm posting",
-  intro: 'The latest from LinkedIn and X on the work side, and Instagram and YouTube on the personal side.',
+  intro: 'The latest from LinkedIn, X, Instagram and YouTube, all in one place.',
   /**
    * The social hub Worker, e.g. https://harish-social.<account>.workers.dev. Empty until it is
    * deployed; while empty the feed shows the profile links instead of posts.
    * VITE_SOCIAL_API overrides it for local development.
    */
   api: 'https://harish-social.harish-social-api.workers.dev',
-  /** Posts per side in the home section. */
-  homeCount: 3,
+  /** Posts per platform in the home section. */
+  homeCount: 2,
   page: {
     title: 'Everything I post',
-    intro: 'Work notes from LinkedIn and X, and the badminton, trips and everything else from Instagram and YouTube. Newest first.',
+    intro: 'Work notes from LinkedIn and X, and the badminton, trips and everything else from Instagram and YouTube. Every platform on one page, newest first.',
   },
 };
 
