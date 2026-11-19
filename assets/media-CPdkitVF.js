@@ -1,0 +1,1 @@
+function e(e){return/^(https?:)?\/\//.test(e)?e:`/${e.replace(/^\//,``)}`}export{e as t};
