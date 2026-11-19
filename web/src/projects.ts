@@ -26,6 +26,8 @@ export interface Project {
   href: string;
   /** GitHub link. */
   codeUrl: string;
+  /** The working app or demo. The home card Open button goes here when set. */
+  demoUrl?: string;
   /** Extra links on the project page, e.g. an app that is already live. */
   links?: ProjectLink[];
   /** The app itself lives at /projects/<slug>/, so no project page is generated there. */
@@ -55,6 +57,8 @@ export const projects: Project[] = [
     description: 'A control plane that runs coding agents in a Docker sandbox through a bounded modify, test and repair loop.',
     tags: ['Python', 'Docker', 'Next.js', 'Gemini', 'Ollama'],
     repo: 'autonomous-agent-harness',
+    demoUrl: '/projects/forgeloop/app/',
+    links: [{ label: 'Open the live demo', href: 'app/', note: 'Sample data: runs in your browser with recorded responses. No backend or AI model is connected.' }],
   }),
   define({
     slug: 'recallx',
@@ -62,6 +66,8 @@ export const projects: Project[] = [
     description: 'Enterprise knowledge search and RAG with hybrid retrieval, cited answers and role based access control.',
     tags: ['Python', 'FastAPI', 'pgvector', 'Next.js', 'Gemini'],
     repo: 'enterprise-knowledge-ai',
+    demoUrl: '/projects/recallx/app/',
+    links: [{ label: 'Open the live demo', href: 'app/', note: 'Sample data: runs in your browser with recorded responses. No backend or AI model is connected.' }],
   }),
   define({
     slug: 'complyai',
@@ -69,6 +75,8 @@ export const projects: Project[] = [
     description: 'Seven schema bound specialist agents in a state machine audit a fictional fintech with human approval gates.',
     tags: ['Python', 'FastAPI', 'Pydantic', 'Next.js', 'Gemini'],
     repo: 'agentic-compliance-auditor',
+    demoUrl: '/projects/complyai/app/',
+    links: [{ label: 'Open the live demo', href: 'app/', note: 'Sample data: runs in your browser with recorded responses. No backend or AI model is connected.' }],
   }),
   define({
     slug: 'sentinelx',
@@ -76,6 +84,8 @@ export const projects: Project[] = [
     description: 'An autonomous incident response engineer that investigates a simulated microservice fleet and asks before risky fixes.',
     tags: ['Python', 'FastAPI', 'Next.js', 'Gemini', 'Ollama'],
     repo: 'autonomous-incident-response',
+    demoUrl: '/projects/sentinelx/app/',
+    links: [{ label: 'Open the live demo', href: 'app/', note: 'Sample data: runs in your browser with recorded responses. No backend or AI model is connected.' }],
   }),
   define({
     slug: 'agentmesh',
@@ -83,6 +93,8 @@ export const projects: Project[] = [
     description: 'An enterprise control plane for governed agents with a durable DAG runner, approvals and full traces.',
     tags: ['Python', 'FastAPI', 'PostgreSQL', 'pgvector', 'Next.js'],
     repo: 'multi-agent-control',
+    demoUrl: '/projects/agentmesh/app/',
+    links: [{ label: 'Open the live demo', href: 'app/', note: 'Sample data: runs in your browser with recorded responses. No backend or AI model is connected.' }],
   }),
   define({
     slug: 'harish-agents-map',
@@ -90,6 +102,7 @@ export const projects: Project[] = [
     description: 'A live 3D map of my AI agents as animated robots on floating hex islands, fed by a status file.',
     tags: ['Three.js', 'JavaScript', 'GitHub Pages'],
     repo: 'harish-agents-map',
+    demoUrl: 'https://hello-harishkumartn.github.io/harish-agents-map/',
     links: [{ label: 'Open the live app', href: 'https://hello-harishkumartn.github.io/harish-agents-map/' }],
   }),
   define({
@@ -98,6 +111,7 @@ export const projects: Project[] = [
     description: 'An RTS style 3D ops board for an agent fleet with robots, routines and a live activity feed.',
     tags: ['Three.js', 'JavaScript', 'Static site'],
     repo: 'harish-ops-colony',
+    demoUrl: '/projects/harish-ops-colony/app/',
     links: [{ label: 'Open the app sample', href: 'app/', note: 'Sample data: the agents, routines and activity shown are made up.' }],
   }),
   define({
@@ -106,6 +120,7 @@ export const projects: Project[] = [
     description: 'Automatic photo colour correction in your browser with Rust and LightCraft compiled to WebAssembly. Photos never leave your device.',
     tags: ['Rust', 'WebAssembly', 'LightCraft', 'JavaScript', 'Google Drive'],
     repo: 'autocolor',
+    demoUrl: '/projects/autocolor/',
     appPage: true,
   }),
 ];

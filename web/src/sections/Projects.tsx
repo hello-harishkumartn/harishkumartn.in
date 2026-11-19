@@ -20,7 +20,7 @@ export function Projects() {
               ))}
             </ul>
             <div className="mt-5 flex flex-wrap gap-3">
-              <a href={p.href} target="_blank" rel="noreferrer" className={`${link} border-primary/60 text-primary hover:bg-primary/10`}>
+              <a href={p.demoUrl ?? p.href} target="_blank" rel="noreferrer" className={`${link} border-primary/60 text-primary hover:bg-primary/10`}>
                 Open<span className="sr-only"> {p.title}, opens in a new tab</span>
               </a>
               <a href={p.codeUrl} target="_blank" rel="noreferrer" className={`${link} border-white/15 text-foreground hover:border-white/30`}>

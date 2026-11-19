@@ -49,3 +49,15 @@ test('visible copy has no em or en dashes and no Oxford comma', () => {
 test('only AutoColor hosts its app at its project page', () => {
   assert.deepEqual(projects.filter((p) => p.appPage).map((p) => p.slug), ['autocolor']);
 });
+
+test('every project has a working app link and local ones exist in site/', async () => {
+  const fs = await import('node:fs');
+  const path = await import('node:path');
+  const { fileURLToPath } = await import('node:url');
+  const siteDir = path.resolve(fileURLToPath(import.meta.url), '../../../site');
+  for (const p of projects) {
+    assert.ok(p.demoUrl, p.slug);
+    if (p.demoUrl.startsWith('/')) assert.ok(fs.existsSync(path.join(siteDir, p.demoUrl, 'index.html')), p.demoUrl);
+    else assert.match(p.demoUrl, /^https:\/\/hello-harishkumartn\.github\.io\//, p.slug);
+  }
+});

@@ -1,0 +1,5 @@
+import { Header, Empty, DetailLink } from "@/components/ui";
+import { AuditProgress, AuditStatusPill } from "@/components/demo-live";
+import { getJSON } from "@/lib/api";
+type Item={id:string;name:string;status:string;scope:string;progress:number;created_at:string};
+export default async function Page(){const items=await getJSON<Item[]>("/api/audits",[]);return <><Header eyebrow="Assurance work" title="Audits" description="Run the explicit workflow, observe each gate, and inspect the full decision trail."/><div className="grid gap-4">{items.map(x=><article className="card p-6" key={x.id}><div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between"><div><div className="flex items-center gap-3"><h2 className="text-lg font-semibold">{x.name}</h2><AuditStatusPill id={x.id} status={x.status} progress={x.progress}/></div><p className="mt-2 text-sm text-ink/55">{x.scope}</p></div><DetailLink href={`/audits/${x.id}`} label="Open audit"/></div><AuditProgress id={x.id} status={x.status} progress={x.progress}/></article>)}{!items.length&&<Empty/>}</div></>}

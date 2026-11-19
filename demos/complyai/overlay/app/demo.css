@@ -1,0 +1,4 @@
+/* Demo build: keep the sample data banner visible above the fixed sidebar. */
+@media (min-width: 1024px) {
+  body > aside { top: 2.75rem; }
+}

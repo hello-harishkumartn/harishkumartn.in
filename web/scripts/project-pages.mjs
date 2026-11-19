@@ -84,8 +84,7 @@ function projectPage(p) {
 <ul class="actions">
 <li><a class="button" href="${esc(p.codeUrl)}">Code on GitHub</a></li>
 ${extra}
-</ul>
-<p class="note">Live demo coming soon.</p>`,
+</ul>${p.demoUrl ? '' : '\n<p class="note">Live demo coming soon.</p>'}`,
   });
 }
 
