@@ -25,11 +25,12 @@ test('committed site/projects pages exist and are up to date (run npm run pages)
   }
 });
 
-test('every project page has its Code link, tags and a coming soon note', () => {
+test('every project page has its Code link, tags and a demo link or a coming soon note', () => {
   for (const p of projects.filter((q) => !q.appPage)) {
     const html = page(p.slug);
     assert.match(html, new RegExp(`<a [^>]*href="${esc(p.codeUrl)}"[^>]*>Code`), p.slug);
-    assert.match(html, /Live demo coming soon/, p.slug);
+    if (p.demoUrl) assert.doesNotMatch(html, /coming soon/i, p.slug);
+    else assert.match(html, /Live demo coming soon/, p.slug);
     assert.match(html, new RegExp(`<h1>${esc(p.title)}</h1>`), p.slug);
     for (const t of p.tags) assert.ok(html.includes(`<li>${t}</li>`), `${p.slug} ${t}`);
     assert.doesNotMatch(html, /<iframe|<script/, p.slug);
@@ -59,6 +60,15 @@ test('the ops colony page links the app sample and says it is sample data', () =
   const html = page('harish-ops-colony');
   assert.match(html, /href="app\/"/);
   assert.match(html, /Sample data/);
+});
+
+test('the five agent projects link their in-browser demo and say it is sample data', () => {
+  for (const slug of ['forgeloop', 'recallx', 'complyai', 'sentinelx', 'agentmesh']) {
+    const html = page(slug);
+    assert.match(html, /<a class="button" href="app\/">Open the live demo<\/a>/, slug);
+    assert.match(html, /Sample data/, slug);
+    assert.ok(fs.existsSync(path.join(siteDir, 'projects', slug, 'app', 'index.html')), `${slug} app is committed`);
+  }
 });
 
 test('writing never overwrites a page it did not generate', () => {

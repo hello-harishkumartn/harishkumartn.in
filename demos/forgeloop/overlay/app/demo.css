@@ -1,0 +1,9 @@
+.demoBanner { position:sticky; top:0; z-index:50; display:flex; flex-wrap:wrap; align-items:center; gap:6px 14px; padding:9px 34px; background:#f3b33d; color:#14100a; font:13px/1.4 system-ui,sans-serif; border-bottom:1px solid #b9862a; }
+.demoBanner strong { font-weight:700; }
+.demoBanner a { color:#14100a; font-weight:600; text-decoration:underline; text-underline-offset:2px; }
+.demoBanner a:first-of-type { margin-left:auto; }
+.demoStart { width:100%; margin:0 0 6px; padding:10px; background:transparent; color:var(--lime); border:1px solid var(--lime); font:inherit; font-size:12px; cursor:pointer; }
+.demoStart:hover { background:rgba(184,245,74,.08); }
+.demoStart:disabled { opacity:.6; cursor:wait; }
+.demoHint { color:var(--muted); font-size:11px; margin:0 0 14px !important; }
+@media (max-width: 700px) { .demoBanner { padding:9px 16px; } .demoBanner a:first-of-type { margin-left:0; } }
