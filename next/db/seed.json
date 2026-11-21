@@ -1,0 +1,232 @@
+{
+  "profile": {
+    "name": "Harish Kumar T N",
+    "short_name": "Harish",
+    "headline": "Harish Kumar T N · code, markets, badminton & trips",
+    "description": "Hi, I'm Harish. This is my little corner of the internet: what I'm building, what I'm learning about markets, badminton clips and trips with friends.",
+    "about": [
+      "I'm Harish Kumar T N. I used to write data pipelines for a living, and these days I'm at IIT Madras doing an MS in Entrepreneurship and heading pre-incubation at CIFIL.",
+      "Outside of that, you'll usually find me on a badminton court (pretty much every day), planning the next trip with friends, or reading about how markets work.",
+      "Somewhere down the line I want to do a PhD in fintech at UCL. This site is where I keep track of it all."
+    ],
+    "quick_facts": [
+      {
+        "label": "Currently",
+        "value": "IIT Madras · CIFIL"
+      },
+      {
+        "label": "Daily ritual",
+        "value": "Badminton 🏸"
+      },
+      {
+        "label": "Dream",
+        "value": "PhD in fintech, UCL"
+      }
+    ],
+    "dream": "A PhD in fintech at the UCL Institute of Finance & Technology (IFT)."
+  },
+  "experience": [
+    {
+      "org": "CIFIL, IIT Madras",
+      "role": "Pre-Incubation Head",
+      "period": "Now",
+      "is_current": true,
+      "summary": "Heading pre-incubation at CIFIL, IIT Madras.",
+      "highlights": [],
+      "sort": 0
+    },
+    {
+      "org": "LeadSquared",
+      "role": "SWE Intern → Associate Software Engineer",
+      "period": "Mar 2022 – Jul 2024",
+      "is_current": false,
+      "summary": "Started as an intern and stayed on as an Associate Software Engineer, mostly on the data side.",
+      "highlights": [
+        "Built data engineering ETL pipelines with Spark, Airflow, Kafka and AWS.",
+        "Built an internal DevOps portal in React and Go."
+      ],
+      "sort": 1
+    }
+  ],
+  "education": [
+    {
+      "school": "Department of Management Studies (DoMS), IIT Madras",
+      "degree": "MS, Entrepreneurship",
+      "period": "2024 – 2027",
+      "is_current": true,
+      "note": null,
+      "sort": 0
+    },
+    {
+      "school": "St. Joseph's",
+      "degree": "B.E., Computer Science & Engineering",
+      "period": "2018 – 2022",
+      "is_current": false,
+      "note": null,
+      "sort": 1
+    }
+  ],
+  "projects": [
+    {
+      "slug": "forgeloop",
+      "title": "ForgeLoop",
+      "description": "A control plane that runs coding agents in a Docker sandbox through a bounded modify, test and repair loop.",
+      "tags": [
+        "Python",
+        "Docker",
+        "Next.js",
+        "Gemini",
+        "Ollama"
+      ],
+      "repo": "autonomous-agent-harness",
+      "demo_url": "https://harishkumartn.in/projects/forgeloop/app/",
+      "demo_note": "Sample data: runs in your browser with recorded responses. No backend or AI model is connected.",
+      "sort": 0
+    },
+    {
+      "slug": "recallx",
+      "title": "RecallX",
+      "description": "Enterprise knowledge search and RAG with hybrid retrieval, cited answers and role based access control.",
+      "tags": [
+        "Python",
+        "FastAPI",
+        "pgvector",
+        "Next.js",
+        "Gemini"
+      ],
+      "repo": "enterprise-knowledge-ai",
+      "demo_url": "https://harishkumartn.in/projects/recallx/app/",
+      "demo_note": "Sample data: runs in your browser with recorded responses. No backend or AI model is connected.",
+      "sort": 1
+    },
+    {
+      "slug": "complyai",
+      "title": "ComplyAI",
+      "description": "Seven schema bound specialist agents in a state machine audit a fictional fintech with human approval gates.",
+      "tags": [
+        "Python",
+        "FastAPI",
+        "Pydantic",
+        "Next.js",
+        "Gemini"
+      ],
+      "repo": "agentic-compliance-auditor",
+      "demo_url": "https://harishkumartn.in/projects/complyai/app/",
+      "demo_note": "Sample data: runs in your browser with recorded responses. No backend or AI model is connected.",
+      "sort": 2
+    },
+    {
+      "slug": "sentinelx",
+      "title": "SentinelX",
+      "description": "An autonomous incident response engineer that investigates a simulated microservice fleet and asks before risky fixes.",
+      "tags": [
+        "Python",
+        "FastAPI",
+        "Next.js",
+        "Gemini",
+        "Ollama"
+      ],
+      "repo": "autonomous-incident-response",
+      "demo_url": "https://harishkumartn.in/projects/sentinelx/app/",
+      "demo_note": "Sample data: runs in your browser with recorded responses. No backend or AI model is connected.",
+      "sort": 3
+    },
+    {
+      "slug": "agentmesh",
+      "title": "AgentMesh",
+      "description": "An enterprise control plane for governed agents with a durable DAG runner, approvals and full traces.",
+      "tags": [
+        "Python",
+        "FastAPI",
+        "PostgreSQL",
+        "pgvector",
+        "Next.js"
+      ],
+      "repo": "multi-agent-control",
+      "demo_url": "https://harishkumartn.in/projects/agentmesh/app/",
+      "demo_note": "Sample data: runs in your browser with recorded responses. No backend or AI model is connected.",
+      "sort": 4
+    },
+    {
+      "slug": "harish-agents-map",
+      "title": "Harish Agents Map",
+      "description": "A live 3D map of my AI agents as animated robots on floating hex islands, fed by a status file.",
+      "tags": [
+        "Three.js",
+        "JavaScript",
+        "GitHub Pages"
+      ],
+      "repo": "harish-agents-map",
+      "demo_url": "https://hello-harishkumartn.github.io/harish-agents-map/",
+      "demo_note": null,
+      "sort": 5
+    },
+    {
+      "slug": "harish-ops-colony",
+      "title": "Harish Ops Colony",
+      "description": "An RTS style 3D ops board for an agent fleet with robots, routines and a live activity feed.",
+      "tags": [
+        "Three.js",
+        "JavaScript",
+        "Static site"
+      ],
+      "repo": "harish-ops-colony",
+      "demo_url": "https://harishkumartn.in/projects/harish-ops-colony/app/",
+      "demo_note": "Sample data: the agents, routines and activity shown are made up.",
+      "sort": 6
+    },
+    {
+      "slug": "autocolor",
+      "title": "AutoColor",
+      "description": "Automatic photo colour correction in your browser with Rust and LightCraft compiled to WebAssembly. Photos never leave your device.",
+      "tags": [
+        "Rust",
+        "WebAssembly",
+        "LightCraft",
+        "JavaScript",
+        "Google Drive"
+      ],
+      "repo": "autocolor",
+      "demo_url": "https://harishkumartn.in/projects/autocolor/",
+      "demo_note": null,
+      "sort": 7
+    }
+  ],
+  "links": [
+    {
+      "icon": "mail",
+      "label": "Email",
+      "href": "mailto:hello.harishkumartn@gmail.com",
+      "display": "hello.harishkumartn@gmail.com",
+      "sort": 0
+    },
+    {
+      "icon": "linkedin",
+      "label": "LinkedIn",
+      "href": "https://www.linkedin.com/in/harish-kumar-tn/",
+      "display": "in/harish-kumar-tn",
+      "sort": 1
+    },
+    {
+      "icon": "instagram",
+      "label": "Instagram",
+      "href": "https://www.instagram.com/harish_kumar_tn/",
+      "display": "@harish_kumar_tn",
+      "sort": 2
+    },
+    {
+      "icon": "x",
+      "label": "X",
+      "href": "https://x.com/harish_kumar_tn",
+      "display": "@harish_kumar_tn",
+      "sort": 3
+    },
+    {
+      "icon": "youtube",
+      "label": "YouTube",
+      "href": "https://www.youtube.com/@harishkumar_tn",
+      "display": "@harishkumar_tn",
+      "sort": 4
+    }
+  ]
+}

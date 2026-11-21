@@ -1,0 +1,5 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "buildCommand": "node scripts/migrate.ts && next build",
+  "crons": [{ "path": "/api/keepalive", "schedule": "30 0 * * *" }]
+}

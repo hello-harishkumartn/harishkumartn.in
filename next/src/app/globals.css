@@ -1,0 +1,18 @@
+@import "tailwindcss";
+
+@theme {
+  --color-court: #1f7a4d;
+  --color-line: #f5f1e6;
+  --color-ink: #0d1512;
+  --color-panel: #13201b;
+  --color-muted: #9fb3aa;
+  --color-shuttle: #ffd166;
+}
+
+html { background: var(--color-ink); color: var(--color-line); }
+body { font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+a { text-underline-offset: 3px; }
+.input { @apply w-full rounded-md border border-white/15 bg-black/30 px-3 py-2 text-sm text-line outline-none focus:border-shuttle; }
+.btn { @apply inline-flex items-center rounded-md bg-court px-3 py-1.5 text-sm font-medium text-white hover:brightness-110; }
+.btn-ghost { @apply inline-flex items-center rounded-md border border-white/20 px-3 py-1.5 text-sm hover:bg-white/5; }
+.label { @apply mb-1 block text-xs uppercase tracking-wide text-muted; }
