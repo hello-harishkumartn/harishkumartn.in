@@ -46,7 +46,7 @@
       <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M8 5v14l11-7z" fill="currentColor"/></svg>
       Start correcting
     </button>
-    <div id="overall" class="bar overall" role="progressbar" aria-label="Overall progress" aria-valuemin="0" aria-valuemax="0" aria-valuenow="0" hidden><span></span></div>
+    <progress id="overall" class="bar overall" aria-label="Overall progress" max="1" value="0" hidden></progress>
   </div>
   <p id="status" class="status" role="status" aria-live="polite"></p>
   <button id="reconnect" class="button" type="button" hidden>Reconnect Google Drive</button>
@@ -87,7 +87,7 @@
     <div class="meta">
       <p class="name"></p>
       <p class="state muted"></p>
-      <div class="bar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" hidden><span></span></div>
+      <progress class="bar" max="100" value="0" hidden></progress>
       <button class="button remove" type="button" hidden>Remove</button>
       <a class="button download" hidden>
         <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M12 4v12m0 0-5-5m5 5 5-5M4 20h16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>

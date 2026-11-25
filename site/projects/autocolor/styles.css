@@ -80,11 +80,25 @@ h2 { margin: 0 0 0.4rem; font-size: 1.25rem; }
 .state { margin: 0.2rem 0 0.8rem; font-size: 0.95rem; }
 .start-row { display: flex; flex-wrap: wrap; gap: 0.75rem 1.25rem; align-items: center; margin: 1rem 0 0.25rem; }
 .button.start { min-height: 52px; padding: 0.7rem 1.6rem; font-size: 1.1rem; }
-.bar { height: 10px; overflow: hidden; border-radius: 999px; background: var(--line); }
-.bar > span { display: block; width: var(--value, 0%); height: 100%; background: var(--accent); transition: width 0.3s; }
-.bar.overall { flex: 1 1 14rem; height: 12px; }
+/* Native <progress>, fully custom styled (modern-web-guidance: progress) */
+.bar {
+  --bar-fill: var(--accent);
+  appearance: none;
+  display: block;
+  inline-size: 100%;
+  block-size: 10px;
+  border: 0 solid;
+  overflow: clip;
+  border-radius: 999px;
+  background: var(--line);
+}
+.bar[hidden] { display: none; }
+.bar::-webkit-progress-bar { background: transparent; }
+.bar::-webkit-progress-value { background: var(--bar-fill); border-radius: 999px; transition: inline-size 0.3s; }
+.bar::-moz-progress-bar { background: var(--bar-fill); border-radius: 999px; }
+.bar.overall { flex: 1 1 14rem; inline-size: auto; block-size: 12px; }
 .meta .bar { margin: 0 0 0.8rem; }
-.card.failed .bar > span { background: #7c2d12; }
+.card.failed .bar { --bar-fill: #7c2d12; }
 @media (max-width: 30rem) { .button.start { flex: 1 1 100%; justify-content: center; } }
 .info { margin-top: 3rem; padding-top: 1.5rem; border-top: 1px solid var(--line); }
 .info p { color: var(--muted); }

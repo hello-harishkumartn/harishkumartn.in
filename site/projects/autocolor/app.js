@@ -39,10 +39,9 @@ const STAGES = {
 
 function setBar(bar, now, max, text) {
   bar.hidden = false;
-  bar.setAttribute('aria-valuemax', max);
-  bar.setAttribute('aria-valuenow', now);
+  bar.max = max || 1;
+  bar.value = max ? now : 0;
   bar.setAttribute('aria-valuetext', text);
-  bar.style.setProperty('--value', `${max ? (now / max) * 100 : 0}%`);
 }
 
 function setStage(card, stage) {
