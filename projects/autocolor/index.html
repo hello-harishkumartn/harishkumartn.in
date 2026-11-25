@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AutoColor | Harish Kumar T N</title>
+<meta name="description" content="Automatic colour correction for photos. Runs in your browser and never uploads your photos.">
+<meta name="theme-color" content="#0d0b09">
+<meta name="referrer" content="strict-origin-when-cross-origin">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='14' fill='%23fb923c'/%3E%3Cpath d='M16 2a14 14 0 0 1 0 28z' fill='%230d0b09'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="styles.css">
+<script type="module" src="app.js"></script>
+</head>
+<body>
+<a class="skip" href="#main">Skip to the photo tool</a>
+<header class="top">
+  <a class="back" href="../../#projects">Back to harishkumartn.in</a>
+</header>
+<main id="main">
+  <p class="kicker">Project</p>
+  <h1>
+    <svg class="logo" viewBox="0 0 32 32" aria-hidden="true" focusable="false"><circle cx="16" cy="16" r="14" fill="currentColor"/><path d="M16 2a14 14 0 0 1 0 28z" fill="var(--bg)"/></svg>
+    AutoColor
+  </h1>
+  <p class="lead">Automatic colour correction for your photos. Add photos and get corrected copies back with no sliders. Everything runs on your device.</p>
+
+  <section id="drop" class="drop" aria-labelledby="add-title">
+    <h2 id="add-title">Add photos</h2>
+    <p class="muted">Drop photos here or choose them. They wait in the list below until you press Start correcting. JPEG, PNG and WebP work everywhere. HEIC works where your browser can open it.</p>
+    <div class="actions">
+      <button id="pick" class="button primary" type="button">
+        <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M12 16V4m0 0L7 9m5-5 5 5M4 16v4h16v-4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        Choose photos
+      </button>
+      <input id="file" class="visually-hidden" type="file" multiple accept="image/jpeg,image/png,image/webp,image/heic,image/heif,.heic,.heif" tabindex="-1" aria-hidden="true">
+      <button id="drive" class="button" type="button" disabled>
+        <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M8 3h8l6 11-4 7H6l-4-7z M8 3l6 11H2 M16 3 10 14M14 14h8M6 21l4-7" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg>
+        <span>Google Drive setup pending</span>
+      </button>
+    </div>
+    <p id="drive-note" class="muted small">Google Drive input will be available once it is set up.</p>
+  </section>
+
+  <div class="start-row">
+    <button id="start" class="button primary start" type="button" disabled aria-describedby="status">
+      <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M8 5v14l11-7z" fill="currentColor"/></svg>
+      Start correcting
+    </button>
+    <progress id="overall" class="bar overall" aria-label="Overall progress" max="1" value="0" hidden></progress>
+  </div>
+  <p id="status" class="status" role="status" aria-live="polite"></p>
+  <button id="reconnect" class="button" type="button" hidden>Reconnect Google Drive</button>
+
+  <section id="results-section" aria-labelledby="results-title" hidden>
+    <div class="results-head">
+      <h2 id="results-title">Your photos</h2>
+      <div class="actions">
+        <button id="zip" class="button primary" type="button" disabled>Download all as zip</button>
+        <button id="clear" class="button" type="button">Clear</button>
+      </div>
+    </div>
+    <ul id="results" class="results"></ul>
+  </section>
+
+  <section class="info" aria-labelledby="how-title">
+    <h2 id="how-title">How it works</h2>
+    <p>AutoColor measures each photo (brightness, the darkest and brightest tones, colour cast, colourfulness and noise) and only changes what measures out of range. It then sets exposure, white balance, shadows, highlights, black and white points, contrast, vibrance and noise reduction and renders the photo in linear light with the LightCraft develop pipeline compiled to WebAssembly. Photos that already look balanced are changed only a little.</p>
+    <p>The corrected photo keeps its full size and is saved as a high quality JPEG named after the original with -autocolor added. Camera RAW files are not supported. Photo metadata such as camera details and location is not copied to the new file. Results are automatic and will not suit every photo, so keep your originals.</p>
+  </section>
+
+  <section class="info" aria-labelledby="privacy-title">
+    <h2 id="privacy-title">Privacy and credits</h2>
+    <p>Your photos are processed on your device and are never uploaded. This page sets no cookies and has no analytics.</p>
+    <p>If you use Google Drive, AutoColor reads only the files you pick (with the drive.file permission) and stores nothing. AutoColor's use of information received from Google APIs adheres to the <a href="https://developers.google.com/terms/api-services-user-data-policy">Google API Services User Data Policy</a>, including the Limited Use requirements. See Google's <a href="https://policies.google.com/terms">Terms of Service</a> and <a href="https://policies.google.com/privacy">Privacy Policy</a>. You can remove AutoColor's access at any time in your <a href="https://myaccount.google.com/permissions">Google Account permissions</a>.</p>
+    <p>Built on <a href="https://github.com/storytold/lightcraft">LightCraft by storytold</a> (MIT/Apache-2.0). Licence texts: <a href="licenses/LICENSE-MIT">MIT</a>, <a href="licenses/LICENSE-APACHE">Apache-2.0</a> and <a href="licenses/NOTICE">NOTICE</a>. Rust crates compiled into the engine are listed with their licences in <a href="licenses/rust-crates.txt">rust-crates.txt</a>. AutoColor itself is <a href="licenses/LICENSE">MIT licensed</a> and its code is on <a href="https://github.com/hello-harishkumartn/autocolor">GitHub</a>. No JavaScript libraries are used. AutoColor is free and provided as is, without warranty of any kind.</p>
+  </section>
+</main>
+<template id="card-template">
+  <li class="card">
+    <div class="compare" style="--pos: 50%">
+      <img class="after" alt="" decoding="async">
+      <img class="before" alt="" decoding="async">
+      <span class="tag left" aria-hidden="true">Original</span>
+      <span class="tag right" aria-hidden="true">Corrected</span>
+      <input type="range" min="0" max="100" value="50" aria-label="Compare original and corrected">
+    </div>
+    <div class="meta">
+      <p class="name"></p>
+      <p class="state muted"></p>
+      <progress class="bar" max="100" value="0" hidden></progress>
+      <button class="button remove" type="button" hidden>Remove</button>
+      <a class="button download" hidden>
+        <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M12 4v12m0 0-5-5m5 5 5-5M4 20h16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        Download
+      </a>
+    </div>
+  </li>
+</template>
+</body>
+</html>

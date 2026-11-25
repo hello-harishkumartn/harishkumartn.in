@@ -1,0 +1,2 @@
+:HL["/projects/agentmesh/app/_next/static/chunks/3qzoberm9kdv1.css","style"]
+0:{"tree":{"name":"","param":null,"prefetchHints":4176,"slots":{"children":{"name":"runs","param":null,"prefetchHints":4192,"slots":{"children":{"name":"id","param":{"type":"d","key":"3a14365c-460a-4d73-95e0-cf2e8262272a","siblings":["live"]},"prefetchHints":4192,"slots":{"children":{"name":"__PAGE__","param":null,"prefetchHints":4256,"slots":null}}}}}}},"staleTime":300,"buildId":"lULTnnag0-Sd1sZnefcYX"}

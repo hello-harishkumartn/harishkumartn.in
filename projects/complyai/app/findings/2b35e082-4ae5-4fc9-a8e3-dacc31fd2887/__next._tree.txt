@@ -1,0 +1,2 @@
+:HL["/projects/complyai/app/_next/static/chunks/1k8ufabvn9qz5.css","style"]
+0:{"tree":{"name":"","param":null,"prefetchHints":4176,"slots":{"children":{"name":"findings","param":null,"prefetchHints":4192,"slots":{"children":{"name":"id","param":{"type":"d","key":"2b35e082-4ae5-4fc9-a8e3-dacc31fd2887","siblings":[]},"prefetchHints":4192,"slots":{"children":{"name":"__PAGE__","param":null,"prefetchHints":4256,"slots":null}}}}}}},"staleTime":300,"buildId":"uUhWicGErjLmEV1ao7N8J"}
